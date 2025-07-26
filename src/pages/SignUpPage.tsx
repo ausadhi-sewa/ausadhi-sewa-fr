@@ -58,7 +58,7 @@ export default function SignUpPage() {
       console.log('🔵 [SIGNUP PAGE] Dispatching googleSignIn action');
       await dispatch(googleSignIn()).unwrap();
       console.log('🟢 [SIGNUP PAGE] Google sign-in action completed successfully');
-      // Redux will handle the redirect to Google OAuth
+      // The redirect will happen in the thunk itself
     } catch (error) {
       console.error('🔴 [SIGNUP PAGE] Google sign-in failed:', error);
     }

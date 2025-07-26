@@ -9,28 +9,24 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Google sign in
+// Google sign in - Updated for server-side redirect
 export const googleSignIn = createAsyncThunk(
   'auth/googleSignIn',
   async (_, { rejectWithValue }) => {
     console.log('🔵 [AUTH SLICE] Starting Google sign-in thunk');
     try {
-      const response = await authApi.googleSignIn();
-      console.log('🟢 [AUTH SLICE] Google sign-in API response received:', {
-        success: response.success,
-        hasUrl: !!response.data?.url
-      });
+      // For server-side redirect, we need to navigate to the backend endpoint
+      // The backend will handle the OAuth flow and redirect to Google
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+      const googleAuthUrl = `${apiUrl}/auth/google`;
       
-      if (response.success && response.data?.url) {
-        console.log('🟢 [AUTH SLICE] Redirecting to Google OAuth URL');
-        console.log('🟢 [AUTH SLICE] Redirect URL:', response.data.url);
-        // Redirect to Google OAuth URL
-        window.location.href = response.data.url;
-        return response;
-      } else {
-        console.error('🔴 [AUTH SLICE] Invalid response from server:', response);
-        return rejectWithValue('Invalid response from server');
-      }
+      console.log('🟢 [AUTH SLICE] Redirecting to backend Google auth endpoint:', googleAuthUrl);
+      
+      // Redirect to backend endpoint which will handle the OAuth flow
+      window.location.href = googleAuthUrl;
+      
+      // This will never be reached due to redirect, but we need to return something
+      return { success: true, message: 'Redirecting to Google OAuth' };
     } catch (error: any) {
       console.error('🔴 [AUTH SLICE] Google sign-in thunk error:', error);
       return rejectWithValue(error.response?.data?.message || 'Google sign in failed');
@@ -60,20 +56,6 @@ export const login = createAsyncThunk(
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
-    }
-  }
-);
-
-// // Handle Google callback - This is not needed for the current flow
-// // The backend handles the callback and redirects to frontend
-export const handleGoogleCallback = createAsyncThunk(
-  'auth/handleGoogleCallback',
-  async (code: string, { rejectWithValue }) => {
-    try {
-      const response = await authApi.handleGoogleCallback(code);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Google callback failed');
     }
   }
 );
@@ -176,23 +158,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-       // Google Callback
-      .addCase(handleGoogleCallback.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(handleGoogleCallback.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        // Store token in localStorage
-        localStorage.setItem('token', action.payload.token);
-      })
-      .addCase(handleGoogleCallback.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // Session Check
+       // Session Check
       .addCase(checkSession.pending, (state) => {
         state.loading = true;
         state.error = null;

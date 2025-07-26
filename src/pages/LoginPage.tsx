@@ -46,7 +46,7 @@ export default function LoginPage() {
       console.log('🔵 [LOGIN PAGE] Dispatching googleSignIn action');
       await dispatch(googleSignIn()).unwrap();
       console.log('🟢 [LOGIN PAGE] Google sign-in action completed successfully');
-      // Redux will handle the redirect to Google OAuth
+      // The redirect will happen in the thunk itself
     } catch (error) {
       console.error('🔴 [LOGIN PAGE] Google sign-in failed:', error);
     }
