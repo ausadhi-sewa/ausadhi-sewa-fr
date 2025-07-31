@@ -6,30 +6,7 @@ import { IconPill, IconTruck, IconShield, IconHeart } from "@tabler/icons-react"
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-medical-green-50 to-medical-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-medical-green-500 to-medical-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">AS</span>
-              </div>
-              <h1 className="text-2xl font-bold text-neutral-800">Ausadhi Sewa</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to="/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link to="/signup">
-                <Button className="bg-medical-green-600 hover:bg-medical-green-700">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
