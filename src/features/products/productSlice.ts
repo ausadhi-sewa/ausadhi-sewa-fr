@@ -4,8 +4,10 @@ import type { Product, ProductFilters, CreateProductData, UpdateProductData } fr
 
 interface ProductState {
   products: Product[];
+  featuredProducts: Product[];
   currentProduct: Product | null;
   loading: boolean;
+  featuredLoading: boolean;
   error: string | null;
   pagination: {
     page: number;
@@ -17,8 +19,10 @@ interface ProductState {
 
 const initialState: ProductState = {
   products: [],
+  featuredProducts: [],
   currentProduct: null,
   loading: false,
+  featuredLoading: false,
   error: null,
   pagination: {
     page: 1,
@@ -34,6 +38,15 @@ export const fetchProducts = createAsyncThunk(
   async (filters: ProductFilters = {}) => {
     const response = await productApi.getProducts(filters);
     console.log('🔵 [PRODUCT_SLICE] Fetching products:', response.data);
+    return response.data;
+  }
+);
+
+export const fetchFeaturedProducts = createAsyncThunk(
+  'products/fetchFeaturedProducts',
+  async (limit: number = 8) => {
+    const response = await productApi.getFeaturedProducts({ limit });
+    console.log('🔵 [PRODUCT_SLICE] Fetching featured products:', response.data);
     return response.data;
   }
 );
@@ -107,6 +120,19 @@ const productSlice = createSlice({
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch products';
+      })
+      // Fetch featured products
+      .addCase(fetchFeaturedProducts.pending, (state) => {
+        state.featuredLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
+        state.featuredLoading = false;
+        state.featuredProducts = action.payload.products || [];
+      })
+      .addCase(fetchFeaturedProducts.rejected, (state, action) => {
+        state.featuredLoading = false;
+        state.error = action.error.message || 'Failed to fetch featured products';
       })
       // Fetch product by ID
       .addCase(fetchProductById.pending, (state) => {

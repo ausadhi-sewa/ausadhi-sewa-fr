@@ -11,7 +11,8 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import DashboardPage from './pages/DashboardPage';
-
+import ProductsPage from './pages/ProductsPage';
+import ProductDetailsPage from './pages/ProductDetailsPage';
 // Callback component for Google OAuth
 const AuthCallback = () => {
   console.log('🔵 [AUTH CALLBACK] Callback component rendered');
@@ -54,8 +55,16 @@ const router = createBrowserRouter([
         element: <DashboardPage />,
       },
       {
+        path: '/products',
+        element: <ProductsPage />,
+      },
+      {
         path: '/auth/callback',
         element: <AuthCallback />,
+      },
+      {
+        path: '/product/:id',
+        element: <ProductDetailsPage />,
       },
     ],
   },

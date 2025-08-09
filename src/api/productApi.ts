@@ -25,6 +25,7 @@ export interface Product {
   batchNumber?: string;
   prescriptionRequired: 'yes' | 'no';
   profileImgUrl?: string;
+  images?: Array<{ id: string; url: string; storagePath: string; createdAt: string }>;
   isActive: boolean;
   isFeatured: boolean;
   createdAt: string;

@@ -1,20 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { IconMenuDeep, IconX, IconShoppingCart, } from "@tabler/icons-react";
+import { IconMenuDeep, IconX } from "@tabler/icons-react";
 import logo from "../../assets/AusadhiSewa.logo.png"
 import { useAppDispatch,useAppSelector } from "@/utils/hooks";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {logoutUser,checkSession} from "@/features/auth/authSlice";
+import { LiquidButton } from "../ui/liquid-glass-button";
+import CartIcon from "../cart/CartIcon";
+import CartDrawer from "../cart/CartDrawer";
+
 export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const {user,loading} = useAppSelector((state)=>state.auth);
+  
   React.useEffect(() => {
     dispatch(checkSession());
   }, [dispatch]);
+  
   React.useEffect(() => { 
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -36,9 +42,8 @@ export function Navbar() {
     <>
       {/* Navbar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? "bg-white/90 backdrop-blur-md shadow-lg rounded-2xl mx-4 mt-2"
+        className={`fixed top-0  left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+            ? "bg-transparent backdrop-blur-md shadow-lg rounded-2xl mx-4 mt-2"
             : "bg-transparent"
         }`}
       >
@@ -62,17 +67,17 @@ export function Navbar() {
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
                 {navLinks.map((link) => (
-                  <a
+                  <Link
                     key={link.href}
-                    href={link.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:scale-105 ${
+                    to={link.href}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:scale-105 shadow-medical ${
                       isScrolled
                         ? "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                         : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
                     }`}
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -80,37 +85,27 @@ export function Navbar() {
             {/* CTA & Cart Button */}
             <div className="hidden md:flex items-center gap-4">
               {user ? (
-                <button
+                <LiquidButton
                 onClick={() => dispatch(logoutUser())}
-                className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${
-                  isScrolled
-                    ? "bg-medical-green-500 text-white hover:bg-medical-green-600 shadow-lg"
-                    : "bg-white text-gray-900 hover:bg-gray-100 shadow-lg"
-                }`}
+                className={`h-10 rounded-full text-black ${isScrolled ? " text-black" : "bg-white text-gray-900"}`}
+              
               >
                 Logout
-              </button>
+              </LiquidButton>
               ) : (
-                <button
+                <LiquidButton
                 onClick={() => navigate("/signup")}
-                className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${
+                className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 transform  ${
                   isScrolled
-                    ? "bg-medical-green-500 text-white hover:bg-medical-green-600 shadow-lg"
-                    : "bg-white text-gray-900 hover:bg-gray-100 shadow-lg"
+                    ? " text-white  shadow-lg h-10 rounded-full"
+                    : "bg-white text-gray-900  shadow-lg h-10 rounded-full"
                 }`}
               >
                 Sign In
-              </button>
+              </LiquidButton>
               )}
               {/* Cart Icon */}
-              <button
-                className={`p-2 rounded-full transition-colors duration-300 hover:bg-medical-green-50 relative`}
-                aria-label="Cart"
-              >
-                <IconShoppingCart size={26} className="text-medical-green-600" />
-                {/* Example: Cart badge (optional, static for now) */}
-                <span className="absolute -top-1 -right-1 bg-medical-green-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold shadow-md">2</span>
-              </button>
+              <CartIcon />
             </div>
 
             {/* Mobile menu button */}
@@ -163,19 +158,16 @@ export function Navbar() {
                 >
                   Sign In
                 </button>
-                {/* Cart Icon */}
-                <button
-                  className={`p-2 rounded-full transition-colors duration-300 hover:bg-medical-green-50 relative`}
-                  aria-label="Cart"
-                >
-                  <IconShoppingCart size={26} className="text-medical-green-600" />
-                  <span className="absolute -top-1 -right-1 bg-medical-green-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold shadow-md">2</span>
-                </button>
+                {/* Cart Icon for Mobile */}
+                <CartIcon />
               </div>
             </div>
           </div>
         )}
       </nav>
+
+      {/* Cart Drawer */}
+      <CartDrawer />
 
       {/* Spacer to prevent content from hiding behind navbar */}
       <div className="h-16" />
