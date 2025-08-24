@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '../utils/hooks/useCart';
 
 interface FilterState {
@@ -20,7 +21,7 @@ interface FilterState {
   order: 'asc' | 'desc';
 }
 
-export default function ProductsPage() {
+export default function ShopPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { addToCart } = useCart();
@@ -47,10 +48,10 @@ export default function ProductsPage() {
   // Infinite scroll
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastProductRef = useRef<HTMLDivElement | null>(null);
+  const observer = useRef<IntersectionObserver>();
+  const lastProductRef = useRef<HTMLDivElement>(null);
 
-  // Debounced search with optimization
+  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
@@ -58,25 +59,14 @@ export default function ProductsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Memoized product cards for better performance
-  const memoizedProductCards = React.useMemo(() => {
-    return products.map((product, index) => (
-      <ProductCard 
-        key={product.id} 
-        product={product}
-        isLast={index === products.length - 1}
-      />
-    ));
-  }, [products]);
-
   // API filters
   const apiFilters: ProductFilters = {
     page,
     limit: 12,
-    sortBy: filters.sortBy as 'price' | 'createdAt' | 'name' | 'stock',
+    sortBy: filters.sortBy as any,
     order: filters.order,
-    prescription: filters.prescription as 'yes' | 'no' | undefined,
-    inStock: filters.inStock === null ? undefined : filters.inStock,
+    prescription: filters.prescription || undefined,
+    inStock: filters.inStock,
     featured: filters.featured || undefined,
     minPrice: filters.priceRange[0] || undefined,
     maxPrice: filters.priceRange[1] || undefined,
@@ -108,7 +98,7 @@ export default function ProductsPage() {
   // Initial load and search
   useEffect(() => {
     fetchProductsData(true);
-  }, [debouncedSearchQuery, filters, fetchProductsData]);
+  }, [debouncedSearchQuery, filters]);
 
   // Infinite scroll setup
   const lastProductCallback = useCallback((node: HTMLDivElement) => {
@@ -168,12 +158,35 @@ export default function ProductsPage() {
 
   // Handle product actions
   const handleAddToCart = (product: Product) => {
-    addToCart(product, 1);
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: parseFloat(product.price),
+      discountPrice: product.discountPrice ? parseFloat(product.discountPrice) : undefined,
+      image: product.profileImgUrl,
+      quantity: 1
+    });
   };
 
   const handleViewProduct = (product: Product) => {
-    navigate(`/product/${product.slug}`);
+    navigate(`/product/${product.id}`);
   };
+
+  // Loading skeleton
+  const ProductSkeleton = () => (
+    <Card className="overflow-hidden">
+      <Skeleton className="h-48 w-full" />
+      <CardContent className="p-4">
+        <Skeleton className="h-4 w-3/4 mb-2" />
+        <Skeleton className="h-3 w-1/2 mb-3" />
+        <Skeleton className="h-6 w-1/3 mb-3" />
+        <div className="flex justify-between">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   // Product card component
   const ProductCard = ({ product, isLast = false }: { product: Product; isLast?: boolean }) => (
@@ -284,9 +297,9 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className=" border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -554,18 +567,20 @@ export default function ProductsPage() {
                 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                 : 'grid-cols-1'
             }`}>
-              {memoizedProductCards}
+              {products.map((product, index) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product}
+                  isLast={index === products.length - 1}
+                />
+              ))}
             </div>
 
             {/* Loading More */}
             {loading && page > 1 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
                 {[...Array(4)].map((_, index) => (
-                  <div key={index} className="animate-pulse">
-                    <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
-                    <div className="bg-gray-200 h-4 rounded mb-2"></div>
-                    <div className="bg-gray-200 h-4 rounded w-3/4"></div>
-                  </div>
+                  <ProductSkeleton key={index} />
                 ))}
               </div>
             )}
@@ -581,4 +596,4 @@ export default function ProductsPage() {
       </div>
     </div>
   );
-} 
+}

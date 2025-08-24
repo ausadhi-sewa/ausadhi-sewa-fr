@@ -15,6 +15,11 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/admin/OrdersPage';
+import ShopPage from './pages/ShopPage';
+import UserProfile from './components/profile/userprofile';
+import MyOrders from './components/profile/MyOrders';
+import OrderDetails from './components/profile/OrderDetails';
+import MyAddresses from './components/profile/MyAddresses';
 // Callback component for Google OAuth
 const AuthCallback = () => {
   console.log('🔵 [AUTH CALLBACK] Callback component rendered');
@@ -61,6 +66,10 @@ const router = createBrowserRouter([
         element: <OrdersPage/>,
       },
       {
+        path: '/shop',
+        element: <ShopPage />,
+      },
+      {
         path: '/products',
         element: <ProductsPage />,
       },
@@ -75,6 +84,22 @@ const router = createBrowserRouter([
       {
         path: '/checkout',
         element: <CheckoutPage />,
+      },
+      {
+        path: '/profile',
+        element: <UserProfile />,
+      },
+      {
+        path: '/profile/orders',
+        element: <MyOrders />,
+      },
+      {
+        path: '/orders/:id',
+        element: <OrderDetails />,
+      },
+      {
+        path: '/profile/addresses',
+        element: <MyAddresses />,
       },
     ],
   },

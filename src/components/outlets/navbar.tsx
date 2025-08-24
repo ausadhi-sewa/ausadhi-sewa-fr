@@ -9,7 +9,7 @@ import {logoutUser,checkSession} from "@/features/auth/authSlice";
 import { LiquidButton } from "../ui/liquid-glass-button";
 import CartIcon from "../cart/CartIcon";
 import CartDrawer from "../cart/CartDrawer";
-
+import UserIcon from "../profile/usericon";
 export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -101,6 +101,7 @@ export function Navbar() {
                 Sign In
               </LiquidButton>
               )}
+              <UserIcon/>
               {/* Cart Icon */}
               <CartIcon />
             </div>
@@ -155,6 +156,7 @@ export function Navbar() {
                 >
                   Sign In
                 </button>
+                <UserIcon/>
                 {/* Cart Icon for Mobile */}
                 <CartIcon />
               </div>

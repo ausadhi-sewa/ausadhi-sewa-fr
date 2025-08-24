@@ -15,6 +15,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
   Package,
   AlertCircle,
   Loader2,
@@ -33,7 +41,18 @@ import {
   ShoppingCart,
   Printer,
   Download,
+  MoreHorizontal,
+  Edit,
+  Trash2,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const orderStatuses = [
   { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -155,7 +174,7 @@ export default function OrdersPage() {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Order ${order.orderNumber}</title>
+            <title>Order ${order.id}</title>
             <style>
               body { font-family: Arial, sans-serif; margin: 20px; }
               .header { text-align: center; margin-bottom: 30px; }
@@ -170,7 +189,7 @@ export default function OrdersPage() {
           <body>
             <div class="header">
               <h1>Order Details</h1>
-              <h2>Order #${order.orderNumber}</h2>
+              <h2>Order #${order.id}</h2>
             </div>
             <div class="order-info">
               <p><strong>Date:</strong> ${formatDate(order.createdAt)}</p>
@@ -227,7 +246,7 @@ export default function OrdersPage() {
     const csvContent = [
       ['Order Number', 'Date', 'Customer', 'Phone', 'Status', 'Payment Status', 'Total', 'Items'],
       ...orders.map(order => [
-        order.orderNumber,
+        order.id,
         formatDate(order.createdAt),
         order.address.fullName,
         order.address.phoneNumber,
@@ -497,209 +516,249 @@ export default function OrdersPage() {
         </CardContent>
       </Card>
 
-      {/* Orders List */}
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <Card key={order.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-4">
+      {/* Orders Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Orders</CardTitle>
+          <CardDescription>
+            Manage and track all customer orders
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order #</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">
+                    {order.id}
+                  </TableCell>
+                  <TableCell>
                     <div>
-                      <h3 className="font-semibold text-lg">{order.orderNumber}</h3>
-                      <p className="text-sm text-gray-600">
-                        <Calendar className="h-4 w-4 inline mr-1" />
-                        {formatDate(order.createdAt)}
-                      </p>
+                      <div className="font-medium">{order.address.fullName}</div>
+                      <div className="text-sm text-gray-500">{order.address.phoneNumber}</div>
                     </div>
-                    <div className="flex space-x-2">
-                      {getStatusBadge(order.status, 'order')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {formatDate(order.createdAt)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {getStatusBadge(order.status, 'order')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
                       {getStatusBadge(order.paymentStatus, 'payment')}
+                      <div className="text-xs text-gray-500 capitalize">
+                        {order.paymentMethod.replace('_', ' ')}
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Customer</p>
-                      <p className="flex items-center">
-                        <User className="h-4 w-4 mr-1" />
-                        {order.address.fullName}
-                      </p>
-                      <p className="flex items-center text-sm text-gray-600">
-                        <Phone className="h-4 w-4 mr-1" />
-                        {order.address.phoneNumber}
-                      </p>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                     </div>
-
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Delivery Address</p>
-                      <p className="flex items-start text-sm">
-                        <MapPin className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
-                        {order.address.addressLine1}
-                        {order.address.addressLine2 && `, ${order.address.addressLine2}`}
-                        <br />
-                        {order.address.city}, {order.address.district}, {order.address.province}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Payment & Items</p>
-                      <p className="flex items-center text-sm">
-                        {order.paymentMethod === 'cash_on_delivery' ? (
-                          <Truck className="h-4 w-4 mr-1" />
-                        ) : (
-                          <CreditCard className="h-4 w-4 mr-1" />
-                        )}
-                        {order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Online Payment'}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {order.items.length} item{order.items.length !== 1 ? 's' : ''} • ₹{order.total}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Order Items */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600">Order Items:</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {order.items.map((item) => (
-                        <div key={item.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
-                          <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                            {item.product.profileImgUrl ? (
-                              <img
-                                src={item.product.profileImgUrl}
-                                alt={item.product.name}
-                                className="w-full h-full object-cover rounded"
-                              />
-                            ) : (
-                              <Package className="h-4 w-4 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{item.product.name}</p>
-                            <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
-                          </div>
-                          <p className="text-sm font-medium">₹{item.total}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                                  <div className="flex flex-col space-y-2 ml-4">
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        {selectedOrder?.id === order.id ? 'Hide' : 'View'} Details
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePrintOrder(order)}
-                      >
-                        <Printer className="h-4 w-4 mr-1" />
-                        Print
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Order Status</Label>
-                      <Select
-                        value={order.status}
-                        onValueChange={(value) => handleStatusUpdate(order.id, value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {orderStatuses.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Payment Status</Label>
-                      <Select
-                        value={order.paymentStatus}
-                        onValueChange={(value) => handlePaymentStatusUpdate(order.id, value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {paymentStatuses.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Staff Assignment</Label>
-                      {showStaffAssignment === order.id ? (
-                        <div className="space-y-1">
-                          <Input
-                            placeholder="Enter staff ID"
-                            value={staffId}
-                            onChange={(e) => setStaffId(e.target.value)}
-                            className="w-32"
-                          />
-                          <div className="flex space-x-1">
-                            <Button
-                              size="sm"
-                              onClick={() => handleAssignStaff(order.id)}
-                              className="text-xs"
-                            >
-                              Assign
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setShowStaffAssignment(null);
-                                setStaffId('');
-                              }}
-                              className="text-xs"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowStaffAssignment(order.id)}
-                          className="w-32"
-                        >
-                          Assign Staff
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">₹{order.total}</div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          {selectedOrder?.id === order.id ? 'Hide' : 'View'} Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handlePrintOrder(order)}>
+                          <Printer className="mr-2 h-4 w-4" />
+                          Print Order
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                                                 <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                           <div className="w-full">
+                             <Label className="text-xs">Order Status</Label>
+                             <Select
+                               value={order.status}
+                               onValueChange={(value) => handleStatusUpdate(order.id, value)}
+                             >
+                               <SelectTrigger className="w-full mt-1">
+                                 <SelectValue placeholder="Order Status" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 {orderStatuses.map((status) => (
+                                   <SelectItem key={status.value} value={status.value}>
+                                     {status.label}
+                                   </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
+                         </DropdownMenuItem>
+                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                           <div className="w-full">
+                             <Label className="text-xs">Payment Status</Label>
+                             <Select
+                               value={order.paymentStatus}
+                               onValueChange={(value) => handlePaymentStatusUpdate(order.id, value)}
+                             >
+                               <SelectTrigger className="w-full mt-1">
+                                 <SelectValue placeholder="Payment Status" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 {paymentStatuses.map((status) => (
+                                   <SelectItem key={status.value} value={status.value}>
+                                     {status.label}
+                                   </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
+                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                                                 <DropdownMenuLabel>Staff Assignment</DropdownMenuLabel>
+                         {showStaffAssignment === order.id ? (
+                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                             <div className="space-y-2 w-full">
+                               <Input
+                                 placeholder="Enter staff ID"
+                                 value={staffId}
+                                 onChange={(e) => setStaffId(e.target.value)}
+                                 className="w-full"
+                               />
+                               <div className="flex space-x-1">
+                                 <Button
+                                   size="sm"
+                                   onClick={() => handleAssignStaff(order.id)}
+                                   className="text-xs"
+                                 >
+                                   Assign
+                                 </Button>
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={() => {
+                                     setShowStaffAssignment(null);
+                                     setStaffId('');
+                                   }}
+                                   className="text-xs"
+                                 >
+                                   Cancel
+                                 </Button>
+                               </div>
+                             </div>
+                           </DropdownMenuItem>
+                         ) : (
+                           <DropdownMenuItem onClick={() => setShowStaffAssignment(order.id)}>
+                             <User className="mr-2 h-4 w-4" />
+                             Assign Staff
+                           </DropdownMenuItem>
+                         )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Order Details - {selectedOrder.orderNumber}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium mb-2">Customer Information</h4>
+                <div className="space-y-1 text-sm">
+                  <p><strong>Name:</strong> {selectedOrder.address.fullName}</p>
+                  <p><strong>Phone:</strong> {selectedOrder.address.phoneNumber}</p>
+                  <p><strong>Address:</strong></p>
+                  <p className="ml-4">{selectedOrder.address.addressLine1}</p>
+                  {selectedOrder.address.addressLine2 && (
+                    <p className="ml-4">{selectedOrder.address.addressLine2}</p>
+                  )}
+                  <p className="ml-4">
+                    {selectedOrder.address.city}, {selectedOrder.address.district}, {selectedOrder.address.province}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Order Information</h4>
+                <div className="space-y-1 text-sm">
+                  <p><strong>Order Date:</strong> {formatDate(selectedOrder.createdAt)}</p>
+                  <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod.replace('_', ' ')}</p>
+                  <p><strong>Subtotal:</strong> ₹{selectedOrder.subtotal}</p>
+                  <p><strong>Delivery Fee:</strong> ₹{selectedOrder.deliveryFee}</p>
+                  <p><strong>Discount:</strong> ₹{selectedOrder.discount}</p>
+                  <p><strong>Total:</strong> ₹{selectedOrder.total}</p>
+                </div>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div>
+              <h4 className="font-medium mb-2">Order Items</h4>
+              <div className="space-y-2">
+                {selectedOrder.items.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
+                    <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                      {item.product.profileImgUrl ? (
+                        <img
+                          src={item.product.profileImgUrl}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      ) : (
+                        <Package className="h-4 w-4 text-gray-400" />
                       )}
                     </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{item.product.name}</p>
+                      <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="text-sm font-medium">₹{item.total}</p>
                   </div>
+                ))}
               </div>
+            </div>
 
-              {/* Special Instructions */}
-              {order.specialInstructions && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800">Special Instructions:</p>
-                  <p className="text-sm text-blue-700">{order.specialInstructions}</p>
+            {selectedOrder.specialInstructions && (
+              <>
+                <Separator className="my-4" />
+                <div>
+                  <h4 className="font-medium mb-2">Special Instructions</h4>
+                  <p className="text-sm text-gray-700">{selectedOrder.specialInstructions}</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {orders.length === 0 && !loading && (
         <Card>
@@ -707,6 +766,41 @@ export default function OrdersPage() {
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
             <p className="text-gray-600">Try adjusting your filters to see more results.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pagination */}
+      {orders.length > 0 && (
+        <Card className="mt-6">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Showing {((filters.page || 1) - 1) * (filters.limit || 20) + 1} to{' '}
+                {Math.min((filters.page || 1) * (filters.limit || 20), orders.length)} of {orders.length} orders
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilters(prev => ({ ...prev, page: (prev.page || 1) - 1 }))}
+                  disabled={(filters.page || 1) === 1}
+                >
+                  Previous
+                </Button>
+                <span className="flex items-center px-3 py-2 text-sm">
+                  Page {filters.page || 1}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFilters(prev => ({ ...prev, page: (prev.page || 1) + 1 }))}
+                  disabled={orders.length < (filters.limit || 20)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

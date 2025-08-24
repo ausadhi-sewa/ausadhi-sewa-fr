@@ -68,6 +68,11 @@ export const addressApi = {
   async getUserAddresses(): Promise<Address[]> {
     const authAxios = createAuthAxios();
     const response = await authAxios.get<AddressesResponse>('/addresses');
+    
+    if (response.status !== 200) {
+      throw new Error(response.data?.error || 'Failed to get addresses');
+    }
+    
     return response.data.data;
   },
 
@@ -75,6 +80,11 @@ export const addressApi = {
   async getDefaultAddress(): Promise<Address | null> {
     const authAxios = createAuthAxios();
     const response = await authAxios.get<AddressResponse>('/addresses/default');
+    
+    if (response.status !== 200) {
+      throw new Error(response.data?.error || 'Failed to get default address');
+    }
+    
     return response.data.data;
   },
 
@@ -82,6 +92,11 @@ export const addressApi = {
   async createAddress(data: CreateAddressRequest): Promise<Address> {
     const authAxios = createAuthAxios();
     const response = await authAxios.post<AddressResponse>('/addresses', data);
+    
+    if (response.status !== 201 && response.status !== 200) {
+      throw new Error(response.data?.error || 'Failed to create address');
+    }
+    
     return response.data.data;
   },
 
@@ -89,18 +104,32 @@ export const addressApi = {
   async updateAddress(addressId: string, data: UpdateAddressRequest): Promise<Address> {
     const authAxios = createAuthAxios();
     const response = await authAxios.put<AddressResponse>(`/addresses/${addressId}`, data);
+    
+    if (response.status !== 200) {
+      throw new Error(response.data?.error || 'Failed to update address');
+    }
+    
     return response.data.data;
   },
 
   // Delete address
   async deleteAddress(addressId: string): Promise<void> {
     const authAxios = createAuthAxios();
-    await authAxios.delete(`/addresses/${addressId}`);
+    const response = await authAxios.delete(`/addresses/${addressId}`);
+    
+    // Check if the response indicates success
+    if (response.status !== 200 && response.status !== 204) {
+      throw new Error(response.data?.error || 'Failed to delete address');
+    }
   },
 
   // Set address as default
   async setDefaultAddress(addressId: string): Promise<void> {
     const authAxios = createAuthAxios();
-    await authAxios.patch(`/addresses/${addressId}/default`);
+    const response = await authAxios.patch(`/addresses/${addressId}/default`);
+    
+    if (response.status !== 200 && response.status !== 204) {
+      throw new Error(response.data?.error || 'Failed to set default address');
+    }
   },
 };

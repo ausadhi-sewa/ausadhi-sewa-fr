@@ -75,6 +75,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Address form state
   const [addressForm, setAddressForm] = useState<CreateAddressRequest>({
@@ -92,6 +93,14 @@ export default function CheckoutPage() {
   // State for address selection flow
   const [selectedParsedAddress, setSelectedParsedAddress] = useState<ParsedAddress | null>(null);
   const [showUserDetailsForm, setShowUserDetailsForm] = useState(false);
+
+  // State for edit address
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+
+  // State for delete confirmation
+  const [addressToDelete, setAddressToDelete] = useState<Address | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Load user addresses
   useEffect(() => {
@@ -245,6 +254,121 @@ export default function CheckoutPage() {
     setShowAddressSearch(true);
   };
 
+  // Handle edit address
+  const handleEditAddress = (address: Address) => {
+    setEditingAddress(address);
+    setAddressForm({
+      fullName: address.fullName,
+      phoneNumber: address.phoneNumber,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2 || '',
+      city: address.city,
+      district: address.district,
+      province: address.province,
+      postalCode: address.postalCode || '',
+      isDefault: address.isDefault,
+    });
+    setShowEditForm(true);
+    setShowAddressForm(false);
+    setShowAddressSearch(false);
+    setShowUserDetailsForm(false);
+  };
+
+  // Handle update address
+  const handleUpdateAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAddress) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const updatedAddress = await addressApi.updateAddress(editingAddress.id, addressForm);
+      
+      // Update addresses list
+      setAddresses(prev => prev.map(addr => 
+        addr.id === editingAddress.id ? updatedAddress : addr
+      ));
+      
+      // Update selected address if it was the one being edited
+      if (selectedAddress?.id === editingAddress.id) {
+        setSelectedAddress(updatedAddress);
+      }
+      
+      setShowEditForm(false);
+      setEditingAddress(null);
+      setAddressForm({
+        fullName: '',
+        phoneNumber: '',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        district: '',
+        province: '',
+        postalCode: '',
+        isDefault: false,
+      });
+      
+      // Show success message
+      setError(null); // Clear any existing errors
+      setSuccessMessage('Address updated successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error: any) {
+      console.error('Update address error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to update address';
+      setError(errorMessage);
+      setSuccessMessage(null); // Clear success message on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle delete address confirmation
+  const handleDeleteAddressClick = (address: Address) => {
+    setAddressToDelete(address);
+    setShowDeleteConfirm(true);
+  };
+
+  // Handle delete address
+  const handleDeleteAddress = async () => {
+    if (!addressToDelete) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await addressApi.deleteAddress(addressToDelete.id);
+      
+      // Remove from addresses list
+      setAddresses(prev => prev.filter(addr => addr.id !== addressToDelete.id));
+      
+      // Clear selected address if it was the one being deleted
+      if (selectedAddress?.id === addressToDelete.id) {
+        setSelectedAddress(null);
+      }
+      
+      // Clear editing state if it was the one being deleted
+      if (editingAddress?.id === addressToDelete.id) {
+        setShowEditForm(false);
+        setEditingAddress(null);
+      }
+      
+      // Show success message
+      setError(null); // Clear any existing errors
+      setSuccessMessage('Address deleted successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error: any) {
+      console.error('Delete address error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete address';
+      setError(errorMessage);
+      setSuccessMessage(null); // Clear success message on error
+    } finally {
+      setLoading(false);
+      setShowDeleteConfirm(false);
+      setAddressToDelete(null);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       setError('Please select a delivery address');
@@ -363,6 +487,13 @@ export default function CheckoutPage() {
         </Alert>
       )}
 
+      {successMessage && (
+        <Alert className="mb-6 border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Checkout Forms */}
         <div className="lg:col-span-2 space-y-6">
@@ -420,8 +551,9 @@ export default function CheckoutPage() {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // TODO: Implement edit address
+                              handleEditAddress(address);
                             }}
+                            disabled={loading}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -430,8 +562,9 @@ export default function CheckoutPage() {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // TODO: Implement delete address
+                              handleDeleteAddressClick(address);
                             }}
+                            disabled={loading}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -442,7 +575,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {!showAddressForm && !showAddressSearch && !showUserDetailsForm ? (
+              {!showAddressForm && !showAddressSearch && !showUserDetailsForm && !showEditForm ? (
                 <div className="space-y-2">
                   <Button
                     variant="outline"
@@ -553,6 +686,151 @@ export default function CheckoutPage() {
                         onClick={() => {
                           setShowUserDetailsForm(false);
                           setSelectedParsedAddress(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              ) : showEditForm ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Edit Address</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowEditForm(false);
+                        setEditingAddress(null);
+                        setAddressForm({
+                          fullName: '',
+                          phoneNumber: '',
+                          addressLine1: '',
+                          addressLine2: '',
+                          city: '',
+                          district: '',
+                          province: '',
+                          postalCode: '',
+                          isDefault: false,
+                        });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <form onSubmit={handleUpdateAddress} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="editFullName">Full Name *</Label>
+                        <Input
+                          id="editFullName"
+                          value={addressForm.fullName}
+                          onChange={(e) => setAddressForm(prev => ({ ...prev, fullName: e.target.value }))}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editPhoneNumber">Phone Number *</Label>
+                        <Input
+                          id="editPhoneNumber"
+                          value={addressForm.phoneNumber}
+                          onChange={(e) => setAddressForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="editAddressLine1">Address Line 1 *</Label>
+                      <Input
+                        id="editAddressLine1"
+                        value={addressForm.addressLine1}
+                        onChange={(e) => setAddressForm(prev => ({ ...prev, addressLine1: e.target.value }))}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="editAddressLine2">Address Line 2</Label>
+                      <Input
+                        id="editAddressLine2"
+                        value={addressForm.addressLine2}
+                        onChange={(e) => setAddressForm(prev => ({ ...prev, addressLine2: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="editCity">City *</Label>
+                        <Input
+                          id="editCity"
+                          value={addressForm.city}
+                          onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editDistrict">District *</Label>
+                        <Input
+                          id="editDistrict"
+                          value={addressForm.district}
+                          onChange={(e) => setAddressForm(prev => ({ ...prev, district: e.target.value }))}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editProvince">Province *</Label>
+                        <Input
+                          id="editProvince"
+                          value={addressForm.province}
+                          onChange={(e) => setAddressForm(prev => ({ ...prev, province: e.target.value }))}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="editPostalCode">Postal Code</Label>
+                      <Input
+                        id="editPostalCode"
+                        value={addressForm.postalCode}
+                        onChange={(e) => setAddressForm(prev => ({ ...prev, postalCode: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="editIsDefault"
+                        checked={addressForm.isDefault}
+                        onCheckedChange={(checked) => setAddressForm(prev => ({ ...prev, isDefault: checked as boolean }))}
+                      />
+                      <Label htmlFor="editIsDefault">Set as default address</Label>
+                    </div>
+
+                    <div className="flex space-x-2">
+                      <Button type="submit" disabled={loading}>
+                        {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Update Address
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowEditForm(false);
+                          setEditingAddress(null);
+                          setAddressForm({
+                            fullName: '',
+                            phoneNumber: '',
+                            addressLine1: '',
+                            addressLine2: '',
+                            city: '',
+                            district: '',
+                            province: '',
+                            postalCode: '',
+                            isDefault: false,
+                          });
                         }}
                       >
                         Cancel
@@ -811,6 +1089,50 @@ export default function CheckoutPage() {
           </Card>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && addressToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Trash2 className="h-5 w-5 mr-2 text-red-500" />
+                Delete Address
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Are you sure you want to delete the address for <strong>{addressToDelete.fullName}</strong>?
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                This action cannot be undone.
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAddress}
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Delete
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setAddressToDelete(null);
+                  }}
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

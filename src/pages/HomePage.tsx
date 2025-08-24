@@ -100,8 +100,11 @@ export default function HomePage() {
               <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
                 EVERYDAY ESSENTIALS
               </h1>
-              <button className="px-6 py-3 shadow-medical-lg bg-button-color text-black rounded-full font-semibold hover:bg-medical-green-400 transition-colors duration-200 ">
-                SHOP-NOW
+              <button 
+                onClick={() => navigate('/shop')}
+                className="px-6 py-3 shadow-medical-lg bg-button-color text-black rounded-full font-semibold hover:bg-medical-green-400 transition-colors duration-200 "
+              >
+                SHOP NOW
               </button>
             </div>
             <div className="hidden  lg:block relative">
