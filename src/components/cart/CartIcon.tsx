@@ -1,14 +1,13 @@
 import React from 'react';
-import { useAppDispatch, useAppSelector } from '../../utils/hooks';
+import { useAppDispatch } from '../../utils/hooks';
 import { openCart } from '../../features/cart/cartSlice';
+import { useCart } from '../../utils/hooks/useCart';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function CartIcon() {
   const dispatch = useAppDispatch();
-  const { items } = useAppSelector((state) => state.cart);
-
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { totalItems } = useCart();
 
   const handleCartClick = () => {
     dispatch(openCart());

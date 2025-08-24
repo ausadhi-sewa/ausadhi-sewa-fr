@@ -3,7 +3,7 @@ import { Filter, ChevronLeft, ChevronRight, Star, Pill, Leaf, Stethoscope, Packa
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../utils/hooks';
 import { fetchProducts } from '../features/products/productSlice';
-import { addToCart } from '../features/cart/cartSlice';
+import { useCart } from '../utils/hooks/useCart';
 import type { Product, ProductFilters } from '../api/productApi';
 import heroImage from '../assets/hero-removebg-preview.png';
 import { LiquidButton } from '@/components/ui/liquid-glass-button';
@@ -12,6 +12,7 @@ export default function HomePage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { products, loading, pagination } = useAppSelector((state) => state.products);
+  const { addToCart } = useCart();
   
   const [filters, setFilters] = useState<ProductFilters>({
     page: 1,
@@ -67,7 +68,7 @@ export default function HomePage() {
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation(); // Prevent navigation to product details
-    dispatch(addToCart({ product }));
+    addToCart(product);
   };
 
   const totalPages = pagination.totalPages;

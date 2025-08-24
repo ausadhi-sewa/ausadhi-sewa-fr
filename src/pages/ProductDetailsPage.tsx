@@ -1,30 +1,33 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../utils/hooks";
-import { fetchProductById, clearCurrentProduct } from "../features/products/productSlice";
-import { addToCart } from "../features/cart/cartSlice";
-import { 
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../utils/hooks';
+import { fetchProductById, clearCurrentProduct } from '../features/products/productSlice';
+import { useCart } from '../utils/hooks/useCart';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { 
-  ArrowLeft, 
-  ShoppingCart, 
-  Heart, 
-  Share2, 
-  Star,
+} from '@/components/ui/carousel';
+import {
+  ArrowLeft,
+  ShoppingCart,
+  Heart,
+  Share2,
   Package,
-  Calendar,
+  Truck,
+  Shield,
+  Star,
+  CheckCircle,
+  AlertTriangle,
   Hash,
-  Pill,
-  Leaf
-} from "lucide-react";
+  Calendar,
+  Leaf,
+} from 'lucide-react';
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 
 export default function ProductDetailsPage() {
@@ -32,6 +35,7 @@ export default function ProductDetailsPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentProduct, loading, error } = useAppSelector((state) => state.products);
+  const { addToCart, isInCart } = useCart();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
@@ -50,7 +54,7 @@ export default function ProductDetailsPage() {
 
   const handleAddToCart = () => {
     if (currentProduct) {
-      dispatch(addToCart({ product: currentProduct }));
+      addToCart(currentProduct);
     }
   };
 
@@ -168,7 +172,7 @@ export default function ProductDetailsPage() {
                 )}
                 {currentProduct.prescriptionRequired === 'yes' && (
                   <Badge variant="secondary" className="bg-medical-blue-100 text-medical-blue-700 border-medical-blue-200">
-                    <Pill className="w-3 h-3 mr-1" />
+                    <Shield className="w-3 h-3 mr-1" />
                     Prescription Required
                   </Badge>
                 )}
@@ -271,7 +275,7 @@ export default function ProductDetailsPage() {
                 
                 {currentProduct.batchNumber && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Hash className="w-4 h-4 text-medical-green-600" />
+                    <Truck className="w-4 h-4 text-medical-green-600" />
                     <span className="text-neutral-600">Batch Number:</span>
                     <span className="font-medium">{currentProduct.batchNumber}</span>
                   </div>
@@ -279,7 +283,7 @@ export default function ProductDetailsPage() {
                 
                 {currentProduct.expiryDate && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-medical-green-600" />
+                    <Shield className="w-4 h-4 text-medical-green-600" />
                     <span className="text-neutral-600">Expiry Date:</span>
                     <span className="font-medium">
                       {new Date(currentProduct.expiryDate).toLocaleDateString()}
@@ -288,7 +292,7 @@ export default function ProductDetailsPage() {
                 )}
                 
                 <div className="flex items-center gap-2 text-sm">
-                  <Leaf className="w-4 h-4 text-medical-green-600" />
+                  <CheckCircle className="w-4 h-4 text-medical-green-600" />
                   <span className="text-neutral-600">Minimum Stock:</span>
                   <span className="font-medium">{currentProduct.stock}</span>
                 </div>
