@@ -8,7 +8,7 @@ export interface CartItem {
   cartId: string;
   productId: string;
   quantity: number;
-  price: string;
+  price: number;
   addedAt: string;
   updatedAt: string;
   product: {
@@ -17,8 +17,8 @@ export interface CartItem {
     slug: string;
     description: string | null;
     shortDescription: string | null;
-    price: string;
-    discountPrice: string | null;
+    price: number;
+    discountPrice: number | null;
     sku: string;
     stock: number;
     profileImgUrl: string | null;

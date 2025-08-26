@@ -14,8 +14,8 @@ export interface Product {
   slug: string;
   description?: string;
   shortDescription?: string;
-  price: string;
-  discountPrice?: string;
+  price: number;
+  discountPrice?: number;
   sku: string;
   stock: number;
   minStock: number;
@@ -126,7 +126,7 @@ export const productApi = {
 
     // Add gallery images
     if (data.gallery) {
-      data.gallery.forEach((file, index) => {
+      data.gallery.forEach((file,) => {
         formData.append('gallery', file);
       });
     }

@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Filter, Search, Grid, List, SlidersHorizontal, X, Star, ShoppingCart, Eye, Package } from 'lucide-react';
+import { Filter, Search, SlidersHorizontal, X, Package } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../utils/hooks';
 import { fetchProducts, searchProducts } from '../features/products/productSlice';
 import type { Product, ProductFilters } from '../api/productApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useCart } from '../utils/hooks/useCart';
+import ProductCard from '@/components/products/ProductCard';
+import { Slider } from '@/components/ui/slider';
 
 interface FilterState {
   priceRange: [number, number];
@@ -27,8 +27,7 @@ export default function ShopPage() {
   const { addToCart } = useCart();
   const { products, loading, pagination, error } = useAppSelector((state) => state.products);
   
-  // State management
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
   const [showFilters, setShowFilters] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,7 +47,7 @@ export default function ShopPage() {
   // Infinite scroll
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const observer = useRef<IntersectionObserver>();
+  const observer = useRef<IntersectionObserver | null>(null);
   const lastProductRef = useRef<HTMLDivElement>(null);
 
   // Debounced search
@@ -65,9 +64,9 @@ export default function ShopPage() {
     limit: 12,
     sortBy: filters.sortBy as any,
     order: filters.order,
-    prescription: filters.prescription || undefined,
-    inStock: filters.inStock,
-    featured: filters.featured || undefined,
+    prescription: filters.prescription as 'yes' | 'no' | undefined,
+    inStock: filters.inStock || undefined,
+    featured: filters.featured,
     minPrice: filters.priceRange[0] || undefined,
     maxPrice: filters.priceRange[1] || undefined,
   };
@@ -158,143 +157,8 @@ export default function ShopPage() {
 
   // Handle product actions
   const handleAddToCart = (product: Product) => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: parseFloat(product.price),
-      discountPrice: product.discountPrice ? parseFloat(product.discountPrice) : undefined,
-      image: product.profileImgUrl,
-      quantity: 1
-    });
+    addToCart(product, 1);
   };
-
-  const handleViewProduct = (product: Product) => {
-    navigate(`/product/${product.id}`);
-  };
-
-  // Loading skeleton
-  const ProductSkeleton = () => (
-    <Card className="overflow-hidden">
-      <Skeleton className="h-48 w-full" />
-      <CardContent className="p-4">
-        <Skeleton className="h-4 w-3/4 mb-2" />
-        <Skeleton className="h-3 w-1/2 mb-3" />
-        <Skeleton className="h-6 w-1/3 mb-3" />
-        <div className="flex justify-between">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 w-24" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Product card component
-  const ProductCard = ({ product, isLast = false }: { product: Product; isLast?: boolean }) => (
-    <div ref={isLast ? lastProductCallback : undefined}>
-      <Card className="group cursor-pointer overflow-hidden hover:shadow-lg transition-all duration-300">
-        {/* Product Image */}
-        <div className="relative h-48 bg-gray-100 overflow-hidden">
-          {product.profileImgUrl ? (
-            <img
-              src={product.profileImgUrl}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <Package className="h-12 w-12" />
-            </div>
-          )}
-          
-          {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {product.isFeatured && (
-              <Badge className="bg-yellow-500 text-white">
-                <Star className="w-3 h-3 mr-1" />
-                Featured
-              </Badge>
-            )}
-            {product.prescriptionRequired === 'yes' && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                Rx Required
-              </Badge>
-            )}
-          </div>
-          
-          {/* Discount Badge */}
-          {product.discountPrice && parseFloat(product.discountPrice) < parseFloat(product.price) && (
-            <Badge className="absolute top-2 right-2 bg-red-500 text-white">
-              {Math.round(((parseFloat(product.price) - parseFloat(product.discountPrice)) / parseFloat(product.price)) * 100)}% OFF
-            </Badge>
-          )}
-          
-          {/* Action Buttons */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewProduct(product);
-                }}
-                className="bg-white text-gray-800 hover:bg-gray-100"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart(product);
-                }}
-                className="bg-primary text-white hover:bg-primary/90"
-              >
-                <ShoppingCart className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Product Info */}
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-200">
-            {product.name}
-          </h3>
-          
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {product.shortDescription}
-          </p>
-
-          {/* Price */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg font-bold text-primary">
-              ₹{product.discountPrice || product.price}
-            </span>
-            {product.discountPrice && parseFloat(product.discountPrice) < parseFloat(product.price) && (
-              <span className="text-sm text-gray-400 line-through">
-                ₹{product.price}
-              </span>
-            )}
-          </div>
-
-          {/* Stock Status */}
-          <div className="flex items-center justify-between">
-            <span className={`text-sm font-medium ${
-              product.stock > 10 ? 'text-green-600' : 
-              product.stock > 0 ? 'text-orange-600' : 'text-red-600'
-            }`}>
-              {product.stock > 10 ? 'In Stock' : 
-               product.stock > 0 ? 'Low Stock' : 'Out of Stock'}
-            </span>
-            
-            <span className="text-xs text-gray-500">
-              SKU: {product.sku}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
 
   return (
     <div className="min-h-screen">
@@ -315,8 +179,8 @@ export default function ShopPage() {
             </div>
             
             {/* Search Bar */}
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex items-center  gap-4">
+              <div className="relative flex-1 max-w-md border rounded-lg border-medical-green-500">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="text"
@@ -328,31 +192,11 @@ export default function ShopPage() {
                 />
               </div>
               
-              {/* View Mode Toggle */}
-              <div className="flex border rounded-lg">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="rounded-r-none"
-                >
-                  <Grid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="rounded-l-none"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
-              
               {/* Filter Toggle */}
               <Button
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className="hidden lg:flex"
+                className="hidden lg:flex bg-transparent hover:bg-transparent text-black hover:text-black"
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
@@ -374,7 +218,7 @@ export default function ShopPage() {
         <div className="flex gap-8">
           {/* Sidebar Filters - Desktop */}
           <div className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <Card>
+            <Card className='bg-transparent shadow-medical'>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Filters</span>
@@ -419,21 +263,19 @@ export default function ShopPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Price Range
                   </label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={filters.priceRange[0] || ''}
-                      onChange={(e) => handleFilterChange('priceRange', [parseFloat(e.target.value) || 0, filters.priceRange[1]])}
+                  <div className="px-1 py-2">
+                    <Slider
+                      value={[filters.priceRange[0], filters.priceRange[1]]}
+                      onValueChange={(val) => handleFilterChange('priceRange', [val[0], val[1]])}
+                      min={0}
+                      max={10000}
+                      step={50}
                       className="w-full"
                     />
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={filters.priceRange[1] || ''}
-                      onChange={(e) => handleFilterChange('priceRange', [filters.priceRange[0], parseFloat(e.target.value) || 10000])}
-                      className="w-full"
-                    />
+                    <div className="flex justify-between text-sm text-gray-600 mt-2">
+                      <span>₹{filters.priceRange[0]}</span>
+                      <span>₹{filters.priceRange[1]}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -441,7 +283,7 @@ export default function ShopPage() {
 
                 {/* Prescription Required */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text sm font-medium text-gray-700 mb-2">
                     Prescription
                   </label>
                   <select
@@ -490,11 +332,10 @@ export default function ShopPage() {
 
                 <Separator />
 
-                {/* Clear Filters */}
                 <Button
                   variant="outline"
                   onClick={clearFilters}
-                  className="w-full"
+                  className="w-full bg-medical-green-400 shadow-medical rounded-full text-gray-700 hover:text-gray-900 hover:bg-medical-green-400"
                 >
                   Clear All Filters
                 </Button>
@@ -562,28 +403,22 @@ export default function ShopPage() {
               </div>
             )}
 
-            <div className={`grid gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                : 'grid-cols-1'
-            }`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product, index) => (
+                <div ref={index === products.length - 1 ? lastProductCallback : undefined}>
                 <ProductCard 
                   key={product.id} 
-                  product={product}
-                  isLast={index === products.length - 1}
+                  product={product} 
+                  handleProductClick={(id: string) => navigate(`/product/${id}`)}
+                  handleAddToCart={(e: React.MouseEvent<HTMLButtonElement>, product: Product) => {
+                    e.stopPropagation();
+                    handleAddToCart(product);
+                  }}
+                  isLoading={loading}
                 />
+                </div>
               ))}
             </div>
-
-            {/* Loading More */}
-            {loading && page > 1 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
-                {[...Array(4)].map((_, index) => (
-                  <ProductSkeleton key={index} />
-                ))}
-              </div>
-            )}
 
             {/* End of Results */}
             {!hasMore && products.length > 0 && (

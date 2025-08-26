@@ -115,7 +115,7 @@ export const useCart = () => {
   // Calculate totals
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => {
-    const price = parseFloat(item.product.discountPrice || item.product.price);
+    const price = item.product.discountPrice || item.product.price;
     return sum + (price * item.quantity);
   }, 0);
 

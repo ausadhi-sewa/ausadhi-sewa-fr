@@ -67,10 +67,10 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     to={link.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:scale-105 shadow-medical ${
+                    className={`px-3 py-2 rounded-md text-base font-medium transition-colors duration-300 hover:scale-105  ${
                       isScrolled
-                        ? "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                        ? "text-gray-700 hover:text-gray-900 "
+                        : "text-gray-700 hover:text-gray-900"
                     }`}
                   >
                     {link.label}
@@ -82,6 +82,7 @@ export function Navbar() {
             {/* CTA & Cart Button */}
             <div className="hidden md:flex items-center gap-4">
               {user ? (
+                <>
                 <LiquidButton
                 onClick={() => dispatch(logoutUser())}
                 className={`h-10 rounded-full text-black ${isScrolled ? " text-black" : "bg-white text-gray-900"}`}
@@ -89,6 +90,8 @@ export function Navbar() {
               >
                 Logout
               </LiquidButton>
+              <UserIcon/>
+              </>
               ) : (
                 <LiquidButton
                 onClick={() => navigate("/signup")}
@@ -101,7 +104,8 @@ export function Navbar() {
                 Sign In
               </LiquidButton>
               )}
-              <UserIcon/>
+
+              
               {/* Cart Icon */}
               <CartIcon />
             </div>
@@ -127,8 +131,8 @@ export function Navbar() {
           <div
             className={`md:hidden transition-all duration-300 ${
               isScrolled
-                ? "bg-white/95 backdrop-blur-md shadow-lg"
-                : "bg-black/90 backdrop-blur-md"
+                ? "bg-white/95 text-black backdrop-blur-md shadow-lg"
+                : " bg-white/95 text-black backdrop-blur-md"
             }`}
           >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -139,7 +143,7 @@ export function Navbar() {
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-300 ${
                     isScrolled
                       ? "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                      : "text-white hover:text-white hover:bg-white/10"
+                      : "text-black hover:text-white hover:bg-white/10"
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -147,16 +151,29 @@ export function Navbar() {
                 </a>
               ))}
               <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-4">
-                <button
-                  className={`w-full px-6 py-2 rounded-full font-semibold transition-all duration-300 ${
-                    isScrolled
-                      ? "bg-medical-green-500 text-white hover:bg-medical-green-600"
-                      : "bg-white text-gray-900 hover:bg-gray-100"
-                  }`}
+                {user ? (
+                  <>
+                  <LiquidButton
+                  onClick={() => dispatch(logoutUser())}
+                  className={`h-10 w-52 rounded-full text-black   ${isScrolled ? " text-black" : "bg-white text-gray-900"}`}
                 >
-                  Sign In
-                </button>
+                Logout
+                </LiquidButton>
                 <UserIcon/>
+                </>
+                ):(
+                  <LiquidButton
+                onClick={() => navigate("/signup")}
+                className={`px-6 py-2 w-52 rounded-full font-semibold transition-all duration-300 transform  ${
+                  isScrolled
+                    ? " text-white  shadow-lg h-10 rounded-full"
+                    : "bg-white text-gray-900  shadow-lg h-10 rounded-full"
+                }`}
+              >
+                Sign In
+              </LiquidButton>
+                )}
+               
                 {/* Cart Icon for Mobile */}
                 <CartIcon />
               </div>
