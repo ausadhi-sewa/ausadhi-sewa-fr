@@ -173,15 +173,15 @@ export default function CartDrawer() {
                           {item.product.discountPrice ? (
                             <>
                               <span className="text-lg font-bold text-medical-green-600">
-                                ₹{parseFloat(item.product.discountPrice).toFixed(2)}
+                                ₹ {item.product.discountPrice}
                               </span>
                               <span className="text-sm text-neutral-400 line-through">
-                                ₹{parseFloat(item.product.price).toFixed(2)}
+                                ₹{item.product.price}
                               </span>
                             </>
                           ) : (
                             <span className="text-lg font-bold text-medical-green-600">
-                              ₹{parseFloat(item.product.price).toFixed(2)}
+                              ₹{item.product.price}
                             </span>
                           )}
                         </div>
@@ -267,7 +267,7 @@ export default function CartDrawer() {
                   
                   <Button 
                     variant="outline" 
-                    className="w-full h-12"
+                    className="w-full h-12 text-black hover:text-black"
                     onClick={handleClearCart}
                     disabled={loading}
                   >

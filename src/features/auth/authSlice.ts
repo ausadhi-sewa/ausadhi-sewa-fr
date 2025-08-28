@@ -66,6 +66,7 @@ export const checkSession = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await authApi.checkSession();
+      console.log("RESPONSE",response);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Session check failed');

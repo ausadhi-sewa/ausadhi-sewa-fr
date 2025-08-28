@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../utils/hooks';
 import { fetchProductById, clearCurrentProduct } from '../features/products/productSlice';
@@ -12,21 +12,16 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from '@/components/ui/carousel';
 import {
   ArrowLeft,
   ShoppingCart,
-  Heart,
-  Share2,
+  
   Package,
   Truck,
   Shield,
-  Star,
   CheckCircle,
-  AlertTriangle,
-  Hash,
-  Calendar,
-  Leaf,
 } from 'lucide-react';
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 
@@ -37,6 +32,7 @@ export default function ProductDetailsPage() {
   const { currentProduct, loading, error } = useAppSelector((state) => state.products);
   const { addToCart, isInCart } = useCart();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -47,6 +43,18 @@ export default function ProductDetailsPage() {
       dispatch(clearCurrentProduct());
     };
   }, [dispatch, id]);
+
+  // Sync selected index with carousel selection
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setSelectedImageIndex(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on('select', onSelect);
+    return () => {
+      // embla types don't expose typed off; cast to any
+      (carouselApi as any).off('select', onSelect);
+    };
+  }, [carouselApi]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -91,14 +99,19 @@ export default function ProductDetailsPage() {
   ].filter(Boolean);
 
   const hasDiscount = currentProduct.discountPrice && 
-    parseFloat(currentProduct.discountPrice) < parseFloat(currentProduct.price);
+  currentProduct.discountPrice < currentProduct.price;
 
   const discountPercentage = hasDiscount 
-    ? Math.round(((parseFloat(currentProduct.price) - parseFloat(currentProduct.discountPrice!)) / parseFloat(currentProduct.price)) * 100)
+    ? Math.round((currentProduct.price - currentProduct.discountPrice!) / currentProduct.price) * 100
     : 0;
 
+  const handleThumbClick = (index: number) => {
+    setSelectedImageIndex(index);
+    carouselApi?.scrollTo(index);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-transparent via-medical-green-50 to-transparent py-8">
+    <div className="min-h-screen  to-transparent py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Back Button */}
         <Button
@@ -113,7 +126,7 @@ export default function ProductDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images Carousel */}
           <div className="space-y-4">
-            <Carousel className="w-full">
+            <Carousel className="w-full" setApi={setCarouselApi}>
               <CarouselContent>
                 {allImages.map((imageUrl, index) => (
                   <CarouselItem key={index}>
@@ -122,7 +135,6 @@ export default function ProductDetailsPage() {
                         src={imageUrl}
                         alt={`${currentProduct.name} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
-                        onLoad={() => setSelectedImageIndex(index)}
                       />
                     </div>
                   </CarouselItem>
@@ -142,7 +154,7 @@ export default function ProductDetailsPage() {
                 {allImages.map((imageUrl, index) => (
                   <button
                     key={index}
-                    onClick={() => setSelectedImageIndex(index)}
+                    onClick={() => handleThumbClick(index)}
                     className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden transition-all duration-200 ${
                       index === selectedImageIndex
                         ? 'border-medical-green-500 shadow-md'
@@ -239,23 +251,15 @@ export default function ProductDetailsPage() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
               <LiquidButton 
-                className="flex-1 h-12 text-black rounded-lg backdrop:bg-medical-green-100"
+                className="flex items-center justify-center w-full h-12 text-black rounded-lg backdrop:bg-medical-green-100"
                 disabled={currentProduct.stock === 0}
                 onClick={handleAddToCart}
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart
+                <p>{isInCart(currentProduct.id) ? "In Cart" : "Add to Cart"}</p>
               </LiquidButton>
               
-              <Button variant="outline" size="lg" className="h-12 px-6">
-                <Heart className="w-5 h-5 mr-2" />
-                Wishlist
-              </Button>
               
-              <Button variant="outline" size="lg" className="h-12 px-6">
-                <Share2 className="w-5 h-5 mr-2" />
-                Share
-              </Button>
             </div>
 
             <Separator />

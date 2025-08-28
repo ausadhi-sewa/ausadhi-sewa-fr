@@ -58,6 +58,7 @@ export const authApi = {
         withCredentials: true // Include cookies
       });
       console.log('🟢 [AUTH API] Session check successful:', { user: response.data.user?.email });
+      console.log("RESPONSE",response.data);
       return response.data;
     } catch (error: any) {
       console.log('🔴 [AUTH API] Session check failed:', error.response?.data || error.message);

@@ -77,8 +77,9 @@ export default function UserProfile() {
             <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Please Log In</h2>
             <p className="text-gray-600 mb-4">You need to be logged in to view your profile.</p>
-            <Button onClick={() => navigate('/login')}>
-              Log In
+            <p className="text-sm text-gray-500 mb-4">Use the Login button in the navigation bar to sign in.</p>
+            <Button onClick={() => navigate('/')}>
+              Go to Home
             </Button>
           </CardContent>
         </Card>

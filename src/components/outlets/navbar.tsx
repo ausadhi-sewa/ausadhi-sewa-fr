@@ -5,18 +5,21 @@ import { IconMenuDeep, IconX } from "@tabler/icons-react";
 import logo from "../../assets/AusadhiSewa.logo.png"
 import { useAppDispatch,useAppSelector } from "@/utils/hooks";
 import { Link, useNavigate } from "react-router-dom";
-import {logoutUser,checkSession} from "@/features/auth/authSlice";
-import { LiquidButton } from "../ui/liquid-glass-button";
+import {logoutUser,checkSession, login, signup, googleSignIn, clearError} from "@/features/auth/authSlice";
+import { Button, LiquidButton } from "../ui/liquid-glass-button";
 import CartIcon from "../cart/CartIcon";
 import CartDrawer from "../cart/CartDrawer";
-import UserIcon from "../profile/usericon";
+import { AuthDialog } from "../auth/AuthDialog";
+import { Package } from "lucide-react";
+import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem, SelectLabel, SelectGroup } from "@/components/ui/select";
 export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const navigate = useNavigate();
+  const [authDialogOpen, setAuthDialogOpen] = React.useState(false);
+  const [isSignup, setIsSignup] = React.useState(false);
   const dispatch = useAppDispatch();
-  const {user,loading} = useAppSelector((state)=>state.auth);
-  
+  const {user,loading,error} = useAppSelector((state)=>state.auth);
+  const navigate = useNavigate();
   React.useEffect(() => {
     dispatch(checkSession());
   }, [dispatch]);
@@ -29,6 +32,42 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Clear error when dialog closes
+  React.useEffect(() => {
+    if (!authDialogOpen) {
+      dispatch(clearError());
+    }
+  }, [authDialogOpen, dispatch]);
+
+  const handleOpenLogin = () => {
+    setIsSignup(false);
+    setAuthDialogOpen(true);
+  };
+
+  
+
+  const handleAuthSubmit = async (data: any) => {
+    try {
+      if (isSignup) {
+        await dispatch(signup(data)).unwrap();
+      } else {
+        await dispatch(login(data)).unwrap();
+      }
+      setAuthDialogOpen(false);
+    } catch (error) {
+      console.error("Authentication failed:", error);
+    }
+  };
+
+  const handleGoogleClick = async () => {
+    try {
+      await dispatch(googleSignIn()).unwrap();
+      setAuthDialogOpen(false);
+    } catch (error) {
+      console.error("Google authentication failed:", error);
+    }
+  };
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -81,33 +120,57 @@ export function Navbar() {
 
             {/* CTA & Cart Button */}
             <div className="hidden md:flex items-center gap-4">
+            <CartIcon />
               {user ? (
                 <>
-                <LiquidButton
+                 
+             <Button 
+             onClick={() => navigate("/orders")}
+             className="flex items-center gap-2 h-10 rounded-full text-black">
+              <Package className="w-5 h-5" />
+                <span className="text-sm">My Orders</span>
+              </Button>
+              {user?.role === 'admin' && (
+                <Select onValueChange={(value)=>{ if(value==='orders') navigate('/admin/orders'); if(value==='dashboard') navigate('/admin/dashboard'); }}>
+                  <SelectTrigger className="w-[200px] h-10 rounded-full border-4 border-blue-500 text-black">
+                    <SelectValue className="text-black" placeholder="Admin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel className="text-black">Admin</SelectLabel>
+                      <SelectItem value="orders" className="text-black">Orders Management</SelectItem>
+                      <SelectItem value="dashboard" className="text-black">Product Management</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+              <LiquidButton
                 onClick={() => dispatch(logoutUser())}
                 className={`h-10 rounded-full text-black ${isScrolled ? " text-black" : "bg-white text-gray-900"}`}
               
               >
                 Logout
               </LiquidButton>
-              <UserIcon/>
               </>
               ) : (
-                <LiquidButton
-                onClick={() => navigate("/signup")}
-                className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 transform  ${
-                  isScrolled
-                    ? " text-white  shadow-lg h-10 rounded-full"
-                    : "bg-white text-gray-900  shadow-lg h-10 rounded-full"
-                }`}
-              >
-                Sign In
-              </LiquidButton>
+                <div className="flex gap-2">
+                  <LiquidButton
+                    onClick={handleOpenLogin}
+                    className={`px-4 py-2 rounded-full font-semibold transition-all duration-300 transform ${
+                      isScrolled
+                        ? "text-gray-900 shadow-lg h-10 rounded-full"
+                        : "bg-white text-gray-900 shadow-lg h-10 rounded-full"
+                    }`}
+                  >
+                    Login
+                  </LiquidButton>
+                 
+                </div>
               )}
 
               
-              {/* Cart Icon */}
-              <CartIcon />
+          
+            
             </div>
 
             {/* Mobile menu button */}
@@ -150,32 +213,47 @@ export function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-4">
+              <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700 flex flex-col gap-4">
                 {user ? (
                   <>
-                  <LiquidButton
-                  onClick={() => dispatch(logoutUser())}
-                  className={`h-10 w-52 rounded-full text-black   ${isScrolled ? " text-black" : "bg-white text-gray-900"}`}
-                >
-                Logout
-                </LiquidButton>
-                <UserIcon/>
+                  
+                <Button 
+             onClick={() => navigate("/orders")}
+             className="flex items-center gap-2 h-10 rounded-full text-black">
+              <Package className="w-5 h-5" />
+                <span className="text-sm">My Orders</span>
+              </Button>
+              {user?.role === 'admin' && (
+                <>
+                  <Button onClick={() => navigate('/admin/orders')} className="h-10 rounded-full text-black">Orders Management</Button>
+                  <Button onClick={() => navigate('/admin/dashboard')} className="h-10 rounded-full text-black">Product Management</Button>
+                </>
+              )}
                 </>
                 ):(
-                  <LiquidButton
-                onClick={() => navigate("/signup")}
-                className={`px-6 py-2 w-52 rounded-full font-semibold transition-all duration-300 transform  ${
-                  isScrolled
-                    ? " text-white  shadow-lg h-10 rounded-full"
-                    : "bg-white text-gray-900  shadow-lg h-10 rounded-full"
-                }`}
-              >
-                Sign In
-              </LiquidButton>
+                  <>
+                    <LiquidButton
+                      onClick={handleOpenLogin}
+                      className={`px-6 py-2 w-full rounded-full font-semibold transition-all duration-300 transform ${
+                        isScrolled
+                          ? "text-white shadow-lg h-10 rounded-full"
+                          : "bg-white text-gray-900 shadow-lg h-10 rounded-full"
+                      }`}
+                    >
+                      Login
+                    </LiquidButton>
+                   
+                  </>
                 )}
                
                 {/* Cart Icon for Mobile */}
                 <CartIcon />
+                <LiquidButton
+                  onClick={() => dispatch(logoutUser())}
+                  className={`h-10 w-full rounded-full text-black ${isScrolled ? " text-black" : "bg-white text-gray-900"}`}
+                >
+                Logout
+                </LiquidButton>
               </div>
             </div>
           </div>
@@ -184,6 +262,19 @@ export function Navbar() {
 
       {/* Cart Drawer */}
       <CartDrawer />
+
+      {/* Auth Dialog */}
+      <AuthDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
+        onSubmit={handleAuthSubmit}
+        onGoogleClick={handleGoogleClick}
+        isSignup={isSignup}
+        onToggleMode={setIsSignup}
+        loading={loading}
+        googleLoading={loading}
+        error={error}
+      />
 
       {/* Spacer to prevent content from hiding behind navbar */}
       <div className="h-16" />

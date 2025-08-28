@@ -19,8 +19,6 @@ const signupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
-  phone: z.string().optional(),
-  role: z.enum(["user", "admin", "staff"]).optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -46,8 +44,6 @@ export function AuthForm({ onSubmit, isSignup = false, loading = false, error }:
       password: "",
       confirmPassword: "",
       name: "",
-      phone: "",
-      role: "user",
     } : {
       email: "",
       password: "",
@@ -137,40 +133,7 @@ export function AuthForm({ onSubmit, isSignup = false, loading = false, error }:
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number (Optional)</FormLabel>
-                    <FormControl>
-                      <Input type="tel" placeholder="+1234567890" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <FormControl>
-                      <select 
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        {...field}
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                        <option value="staff">Staff</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
             </>
           )}
           

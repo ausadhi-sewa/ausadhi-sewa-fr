@@ -2,7 +2,11 @@ import { IconUserCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../utils/hooks";
 
-export default function UserIcon() {
+interface UserIconProps {
+    onLoginClick?: () => void;
+}
+
+export default function UserIcon({ onLoginClick }: UserIconProps) {
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
 
@@ -10,7 +14,7 @@ export default function UserIcon() {
         if (user) {
             navigate('/profile');
         } else {
-            navigate('/login');
+            onLoginClick?.();
         }
     };
 

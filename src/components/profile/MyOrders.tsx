@@ -110,13 +110,14 @@ export default function MyOrders() {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-md mx-auto">
+        <Card className="max-w-md mx-auto bg-transparent">
           <CardContent className="text-center py-8">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Please Log In</h2>
             <p className="text-gray-600 mb-4">You need to be logged in to view your orders.</p>
-            <Button onClick={() => navigate('/login')}>
-              Log In
+            <p className="text-sm text-gray-500 mb-4">Use the Login button in the navigation bar to sign in.</p>
+            <Button onClick={() => navigate('/')}>
+              Go to Home
             </Button>
           </CardContent>
         </Card>
@@ -145,7 +146,7 @@ export default function MyOrders() {
         </div>
 
         {/* Filters */}
-        <Card>
+        <Card className='bg-transparent border-none shadow-none'>
           <CardHeader>
             <CardTitle className="flex items-center">
               <Filter className="h-5 w-5 mr-2" />
@@ -168,7 +169,7 @@ export default function MyOrders() {
                   <SelectContent>
                     <SelectItem value="all">All statuses</SelectItem>
                     {Object.entries(orderStatusConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key} className='text-black'>
                         {config.label}
                       </SelectItem>
                     ))}
@@ -187,10 +188,10 @@ export default function MyOrders() {
                   <SelectTrigger>
                     <SelectValue placeholder="All payment statuses" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All payment statuses</SelectItem>
+                  <SelectContent className=' text-black hover:text-black'>
+                    <SelectItem className='text-black hover:text-black' value="all">All payment statuses</SelectItem>
                     {Object.entries(paymentStatusConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
+                      <SelectItem key={key} value={key} className='text-black hover:text-medical-green-600'>
                         {config.label}
                       </SelectItem>
                     ))}
@@ -249,7 +250,7 @@ export default function MyOrders() {
             ))}
           </div>
         ) : orders.length === 0 ? (
-          <Card>
+          <Card className='bg-transparent'>
             <CardContent className="text-center py-12">
               <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
@@ -281,7 +282,7 @@ export default function MyOrders() {
             {orders.map((order) => (
               <Card 
                 key={order.id} 
-                className="hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                className="bg-transparent border-2 border-medical-green-600 hover:shadow-md transition-shadow duration-200 cursor-pointer"
                 onClick={() => handleOrderClick(order.id)}
               >
                 <CardContent className="p-6">
@@ -291,7 +292,7 @@ export default function MyOrders() {
                         <div className="flex items-center space-x-2">
                           <Package className="h-5 w-5 text-gray-400" />
                           <span className="font-medium text-gray-900">
-                            Order #{order.orderNumber}
+                            Order #{order.id}
                           </span>
                         </div>
                         <Badge className={orderStatusConfig[order.status]?.color}>
@@ -330,7 +331,7 @@ export default function MyOrders() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className='rounded-full bg-medical-green-500 text-black'>
                         <Eye className="h-4 w-4 mr-1" />
                         View Details
                       </Button>

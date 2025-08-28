@@ -8,9 +8,7 @@ import { store } from './store/store';
 
 // Import pages
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import DashboardPage from './pages/DashboardPage';
+import DashboardPage from './pages/admin/DashboardPage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CheckoutPage from './pages/CheckoutPage';
@@ -21,6 +19,7 @@ import MyOrders from './components/profile/MyOrders';
 import OrderDetails from './components/profile/OrderDetails';
 import MyAddresses from './components/profile/MyAddresses';
 import Productcategories from './components/categories/Productcategories';
+import { AuthGate } from './components/auth/AuthGate';
 // Callback component for Google OAuth
 const AuthCallback = () => {
   console.log('🔵 [AUTH CALLBACK] Callback component rendered');
@@ -51,20 +50,20 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: '/login',
-        element: <LoginPage />,
-      },
-      {
-        path: '/signup',
-        element: <SignUpPage />,
-      },
-      {
-        path: '/dashboard',
-        element: <DashboardPage />,
+        path: '/admin/dashboard',
+        element: (
+          <AuthGate redirectTo='/admin/dashboard'>
+            <DashboardPage />
+          </AuthGate>
+        ),
       },
       {
         path: '/admin/orders',
-        element: <OrdersPage/>,
+        element: (
+          <AuthGate redirectTo='/admin/orders'>
+            <OrdersPage />
+          </AuthGate>
+        ),
       },
       {
         path: '/shop',
@@ -95,7 +94,7 @@ const router = createBrowserRouter([
         element: <UserProfile />,
       },
       {
-        path: '/profile/orders',
+        path: '/orders',
         element: <MyOrders />,
       },
       {

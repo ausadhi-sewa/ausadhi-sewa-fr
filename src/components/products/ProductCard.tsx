@@ -2,6 +2,7 @@ import type { Product } from "@/api/productApi";
 import { LiquidButton } from "../ui/liquid-glass-button";
 import { Skeleton } from "../ui/skeleton";
 import { Card ,CardContent} from "../ui/card";
+import { ShoppingCart } from "lucide-react";
 
 
 export default function ProductCard({
@@ -53,6 +54,7 @@ export default function ProductCard({
             className="text-black w-full h-10 rounded-full backdrop:bg-medical-green-100 hover:backdrop:bg-medical-green-200"
             onClick={(e) => handleAddToCart(e, product)}
           >
+            <ShoppingCart className="w-5 h-5 mr-2" />
             ADD TO CART
           </LiquidButton>
         </div>

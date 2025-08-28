@@ -39,7 +39,7 @@ export interface Order {
   deliveryFee: string;
   discount: string;
   total: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'processing' | 'out_for_delivery' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod: 'cash_on_delivery' | 'online_payment';
   specialInstructions?: string;

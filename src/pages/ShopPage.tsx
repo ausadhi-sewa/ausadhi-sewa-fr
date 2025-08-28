@@ -382,12 +382,12 @@ export default function ShopPage() {
             )}
 
             {/* Products Grid */}
-            {error && (
+            {/* {error && (
               <div className="text-center py-12">
                 <p className="text-red-600 mb-4">Error loading products. Please try again.</p>
                 <Button onClick={() => fetchProductsData(true)}>Retry</Button>
               </div>
-            )}
+            )} */}
 
             {!loading && products.length === 0 && (
               <div className="text-center py-12">

@@ -43,13 +43,13 @@
   --color-popover: #ffffff;
   --color-popover-foreground: #18181b;
   --color-primary: var(--color-medical-green-500);
-  --color-primary-foreground: #ffffff;
+  --color-primary-foreground: #000000;
   --color-secondary: var(--color-medical-blue-500);
   --color-secondary-foreground: #ffffff;
   --color-muted: #f4f4f5;
   --color-muted-foreground: #71717a;
-  --color-accent: var(--color-medical-orange-500);
-  --color-accent-foreground: #ffffff;
+  --color-accent: var(--color-medical-green-400);
+  --color-accent-foreground: #000000;
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
 
