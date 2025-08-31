@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Filter, ChevronLeft, ChevronRight, Star, Pill, Leaf, Stethoscope, Package, Heart, Eye, ShoppingCart } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../utils/hooks';
 import { fetchProducts } from '../features/products/productSlice';
 import { fetchCategories } from '../features/categories/categorySlice';
 import { useCart } from '../utils/hooks/useCart';
 import type { Product, ProductFilters } from '../api/productApi';
 import heroImage from '../assets/hero-removebg-preview.png';
-import { LiquidButton } from '@/components/ui/liquid-glass-button';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import ProductCard from '@/components/products/ProductCard';
+import { toast } from 'sonner';
 
 export default function HomePage() {
   const dispatch = useAppDispatch();

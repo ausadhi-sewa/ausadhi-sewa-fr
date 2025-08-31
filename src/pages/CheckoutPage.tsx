@@ -5,6 +5,7 @@ import { useAppSelector } from '../utils/hooks';
 import { addressApi, type Address, type CreateAddressRequest } from '../api/addressApi';
 import { orderApi, type CreateOrderRequest } from '../api/orderApi';
 import AddressSearch from '../components/checkout/AddressSearch';
+import { AddressConfirmationStep } from '../components/checkout/AddressConfirmationStep';
 import { type ParsedAddress } from '../api/addressSearchApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   MapPin,
@@ -32,8 +32,13 @@ import {
   Trash2,
   Search,
   X,
+  Navigation,
+  Mail,
+  Tag,
+  Shield,
 } from 'lucide-react';
 import { LiquidButton } from '@/components/ui/liquid-glass-button';
+import { toast } from 'sonner';
 
 interface PaymentMethod {
   id: 'cash_on_delivery' | 'online_payment';
@@ -60,47 +65,41 @@ const paymentMethods: PaymentMethod[] = [
   },
 ];
 
+// Step enum for the checkout flow
+enum CheckoutStep {
+  USER_DETAILS = 'user_details',
+  ADDRESS_SEARCH = 'address_search',
+  ADDRESS_CONFIRM = 'address_confirm',
+  PAYMENT = 'payment',
+  REVIEW = 'review',
+}
+
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const { items, subtotal, totalItems, clearCart } = useCart();
 
-  // State
+  // Checkout flow state
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>(CheckoutStep.USER_DETAILS);
+  const [userDetails, setUserDetails] = useState({
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+  });
+  const [selectedParsedAddress, setSelectedParsedAddress] = useState<ParsedAddress | null>(null);
+  const [finalAddress, setFinalAddress] = useState<CreateAddressRequest | null>(null);
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+
+  // Existing state
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-  const [showAddressForm, setShowAddressForm] = useState(false);
-  const [showAddressSearch, setShowAddressSearch] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cash_on_delivery' | 'online_payment'>('cash_on_delivery');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Address form state
-  const [addressForm, setAddressForm] = useState<CreateAddressRequest>({
-    fullName: '',
-    phoneNumber: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    district: '',
-    province: '',
-    postalCode: '',
-    isDefault: false,
-  });
-
-  // State for address selection flow
-  const [selectedParsedAddress, setSelectedParsedAddress] = useState<ParsedAddress | null>(null);
-  const [showUserDetailsForm, setShowUserDetailsForm] = useState(false);
-
-  // State for edit address
-  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
-  const [showEditForm, setShowEditForm] = useState(false);
-
-  // State for delete confirmation
-  const [addressToDelete, setAddressToDelete] = useState<Address | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Load user addresses
   useEffect(() => {
@@ -108,17 +107,6 @@ export default function CheckoutPage() {
       loadAddresses();
     }
   }, [user]);
-
-  // Debug state changes
-  useEffect(() => {
-    console.log('State changed:', {
-      showAddressForm,
-      showAddressSearch,
-      showUserDetailsForm,
-      selectedParsedAddress: selectedParsedAddress ? 'has data' : 'null'
-    });
-  }, [showAddressForm, showAddressSearch, showUserDetailsForm, selectedParsedAddress]);
-
 
   const loadAddresses = async () => {
     try {
@@ -132,251 +120,67 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error('Error loading addresses:', error);
-      setError('Failed to load addresses');
     }
   };
 
-  const handleAddressSubmit = async (e: React.FormEvent) => {
+  // Handle user details submission
+  const handleUserDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const newAddress = await addressApi.createAddress(addressForm);
-      setAddresses(prev => [...prev, newAddress]);
-      setSelectedAddress(newAddress);
-      setShowAddressForm(false);
-      setShowAddressSearch(false);
-      setAddressForm({
-        fullName: '',
-        phoneNumber: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        district: '',
-        province: '',
-        postalCode: '',
-        isDefault: false,
-      });
-    } catch (error: any) {
-      setError(error.message || 'Failed to create address');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddressSelect = (parsedAddress: ParsedAddress) => {
-    console.log('=== Address Selection Debug ===');
-    console.log('Address selected:', parsedAddress);
-    console.log('Current state before update:', {
-      showAddressForm,
-      showAddressSearch,
-      showUserDetailsForm,
-      selectedParsedAddress: selectedParsedAddress ? 'has data' : 'null'
-    });
     
-    // Store the selected address and show user details form
-    setSelectedParsedAddress(parsedAddress);
-    setShowUserDetailsForm(true);
-    setShowAddressSearch(false);
-    setError(null);
-    
-    console.log('State update commands sent:');
-    console.log('- setSelectedParsedAddress:', parsedAddress);
-    console.log('- setShowUserDetailsForm: true');
-    console.log('- setShowAddressSearch: false');
-    console.log('=== End Debug ===');
-  };
-
-  const handleSaveAddressWithUserDetails = async (userDetails: { fullName: string; phoneNumber: string }) => {
-    if (!selectedParsedAddress) {
-      setError('No address selected');
-      return;
-    }
-
     if (!userDetails.fullName.trim() || !userDetails.phoneNumber.trim()) {
-      setError('Please enter your full name and phone number');
+      toast.error('Please enter your full name and phone number');
       return;
     }
 
-    // Basic phone number validation (Nepal format)
+    // Basic phone number validation
     const phoneRegex = /^(\+977|977)?[0-9]{10}$/;
     if (!phoneRegex.test(userDetails.phoneNumber.trim())) {
-      setError('Please enter a valid phone number (10 digits)');
+      toast.error('Please enter a valid phone number (10 digits)');
       return;
     }
 
+    setCurrentStep(CheckoutStep.ADDRESS_SEARCH);
+  };
+
+  // Handle address selection from search
+  const handleAddressSelect = (parsedAddress: ParsedAddress) => {
+    setSelectedParsedAddress(parsedAddress);
+    setCurrentStep(CheckoutStep.ADDRESS_CONFIRM);
+  };
+
+  // Handle address confirmation and finalization
+  const handleAddressConfirm = (confirmedAddress: CreateAddressRequest) => {
+    setFinalAddress(confirmedAddress);
+    setCurrentStep(CheckoutStep.PAYMENT);
+  };
+
+  // Handle discount code application
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) {
+      toast.error('Please enter a discount code');
+      return;
+    }
+
+    setIsApplyingDiscount(true);
     try {
-      setLoading(true);
-      setError(null);
-
-      // Create address from parsed data with user details
-      const newAddress = await addressApi.createAddress({
-        type: 'delivery',
-        fullName: userDetails.fullName.trim(),
-        phoneNumber: userDetails.phoneNumber.trim(),
-        addressLine1: selectedParsedAddress.addressLine1,
-        addressLine2: selectedParsedAddress.addressLine2,
-        city: selectedParsedAddress.city,
-        district: selectedParsedAddress.district,
-        province: selectedParsedAddress.province,
-        postalCode: selectedParsedAddress.postalCode,
-        latitude: selectedParsedAddress.latitude,
-        longitude: selectedParsedAddress.longitude,
-        isDefault: false,
-      });
-
-      // Add to addresses list and select it
-      setAddresses(prev => [...prev, newAddress]);
-      setSelectedAddress(newAddress);
-      setShowUserDetailsForm(false);
-      setSelectedParsedAddress(null);
+      // Simulate discount application (replace with actual API call)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('Address saved with user details:', newAddress);
-    } catch (error: any) {
-      setError(error.message || 'Failed to save address');
-      console.error('Error saving address:', error);
+      // For demo purposes, apply a 10% discount
+      const discount = subtotal * 0.1;
+      setDiscountAmount(discount);
+      toast.success(`Discount applied! You saved ₹${discount.toFixed(2)}`);
+    } catch (error) {
+      toast.error('Invalid discount code');
     } finally {
-      setLoading(false);
+      setIsApplyingDiscount(false);
     }
   };
 
-  const handleManualAddress = () => {
-    setShowAddressSearch(false);
-    setShowAddressForm(true);
-    setSelectedParsedAddress(null);
-    setShowUserDetailsForm(false);
-  };
-
-  const handleBackToAddressSearch = () => {
-    setShowUserDetailsForm(false);
-    setSelectedParsedAddress(null);
-    setShowAddressSearch(true);
-  };
-
-  // Handle edit address
-  const handleEditAddress = (address: Address) => {
-    setEditingAddress(address);
-    setAddressForm({
-      fullName: address.fullName,
-      phoneNumber: address.phoneNumber,
-      addressLine1: address.addressLine1,
-      addressLine2: address.addressLine2 || '',
-      city: address.city,
-      district: address.district,
-      province: address.province,
-      postalCode: address.postalCode || '',
-      isDefault: address.isDefault,
-    });
-    setShowEditForm(true);
-    setShowAddressForm(false);
-    setShowAddressSearch(false);
-    setShowUserDetailsForm(false);
-  };
-
-  // Handle update address
-  const handleUpdateAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingAddress) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const updatedAddress = await addressApi.updateAddress(editingAddress.id, addressForm);
-      
-      // Update addresses list
-      setAddresses(prev => prev.map(addr => 
-        addr.id === editingAddress.id ? updatedAddress : addr
-      ));
-      
-      // Update selected address if it was the one being edited
-      if (selectedAddress?.id === editingAddress.id) {
-        setSelectedAddress(updatedAddress);
-      }
-      
-      setShowEditForm(false);
-      setEditingAddress(null);
-      setAddressForm({
-        fullName: '',
-        phoneNumber: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        district: '',
-        province: '',
-        postalCode: '',
-        isDefault: false,
-      });
-      
-      // Show success message
-      setError(null); // Clear any existing errors
-      setSuccessMessage('Address updated successfully!');
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error: any) {
-      console.error('Update address error:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to update address';
-      setError(errorMessage);
-      setSuccessMessage(null); // Clear success message on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle delete address confirmation
-  const handleDeleteAddressClick = (address: Address) => {
-    setAddressToDelete(address);
-    setShowDeleteConfirm(true);
-  };
-
-  // Handle delete address
-  const handleDeleteAddress = async () => {
-    if (!addressToDelete) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      await addressApi.deleteAddress(addressToDelete.id);
-      
-      // Remove from addresses list
-      setAddresses(prev => prev.filter(addr => addr.id !== addressToDelete.id));
-      
-      // Clear selected address if it was the one being deleted
-      if (selectedAddress?.id === addressToDelete.id) {
-        setSelectedAddress(null);
-      }
-      
-      // Clear editing state if it was the one being deleted
-      if (editingAddress?.id === addressToDelete.id) {
-        setShowEditForm(false);
-        setEditingAddress(null);
-      }
-      
-      // Show success message
-      setError(null); // Clear any existing errors
-      setSuccessMessage('Address deleted successfully!');
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error: any) {
-      console.error('Delete address error:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete address';
-      setError(errorMessage);
-      setSuccessMessage(null); // Clear success message on error
-    } finally {
-      setLoading(false);
-      setShowDeleteConfirm(false);
-      setAddressToDelete(null);
-    }
-  };
-
+  // Handle place order
   const handlePlaceOrder = async () => {
-    if (!selectedAddress) {
-      setError('Please select a delivery address');
-      return;
-    }
-
-    if (!paymentMethod) {
-      setError('Please select a payment method');
+    if (!finalAddress) {
+      toast.error('Please complete address setup');
       return;
     }
 
@@ -384,43 +188,41 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      console.log('Placing order with address:', selectedAddress);
-      console.log('Payment method:', paymentMethod);
-      console.log('Special instructions:', specialInstructions);
+      // Create address first
+      const newAddress = await addressApi.createAddress({
+        ...finalAddress,
+        type: 'delivery',
+        isDefault: false,
+      });
 
       const orderData: CreateOrderRequest = {
-        addressId: selectedAddress.id,
+        addressId: newAddress.id,
         paymentMethod,
         specialInstructions: specialInstructions.trim() || undefined,
-        deliveryFee: 50, // Fixed delivery fee for now
-        discount: 0, // No discount for now
+        deliveryFee: 50,
+        discount: discountAmount,
       };
-
-      console.log('Order data being sent:', orderData);
 
       const order = await orderApi.createOrder(orderData);
       
-      console.log('Order created successfully:', order);
-      
-      // Clear cart after successful order
       clearCart();
-      
       setSuccess(true);
       
-      // Redirect to order confirmation page after 2 seconds
+      toast.success('Order placed successfully!');
+      
       setTimeout(() => {
         navigate(`/orders/${order.id}`);
       }, 2000);
     } catch (error: any) {
       console.error('Error placing order:', error);
-      setError(error.response?.data?.error || error.message || 'Failed to place order');
+      toast.error(error.response?.data?.error || error.message || 'Failed to place order');
     } finally {
       setLoading(false);
     }
   };
 
-  const deliveryFee = 50; // Fixed delivery fee
-  const total = subtotal + deliveryFee;
+  const deliveryFee = 50;
+  const total = subtotal + deliveryFee - discountAmount;
 
   if (!user) {
     return (
@@ -467,7 +269,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      
+      {/* Header */}
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
@@ -480,537 +282,328 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-bold">Checkout</h1>
       </div>
 
-      {error && (
-        <Alert className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert className="mb-6 border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
-        </Alert>
-      )}
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center justify-center space-x-4">
+          {Object.values(CheckoutStep).map((step, index) => {
+            const isActive = currentStep === step;
+            const isCompleted = Object.values(CheckoutStep).indexOf(currentStep) > index;
+            
+            return (
+              <div key={step} className="flex items-center">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                  isActive 
+                    ? 'border-primary bg-primary text-white' 
+                    : isCompleted 
+                    ? 'border-green-500 bg-green-500 text-white'
+                    : 'border-gray-300 text-gray-500'
+                }`}>
+                  {isCompleted ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <span className="text-sm font-medium">{index + 1}</span>
+                  )}
+                </div>
+                {index < Object.values(CheckoutStep).length - 1 && (
+                  <div className={`w-16 h-0.5 mx-2 ${
+                    isCompleted ? 'bg-green-500' : 'bg-gray-300'
+                  }`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="text-center mt-2">
+          <p className="text-sm text-gray-600">
+            {currentStep === CheckoutStep.USER_DETAILS && 'Contact Information'}
+            {currentStep === CheckoutStep.ADDRESS_SEARCH && 'Address Search'}
+            {currentStep === CheckoutStep.ADDRESS_CONFIRM && 'Address Confirmation'}
+            {currentStep === CheckoutStep.PAYMENT && 'Payment Method'}
+            {currentStep === CheckoutStep.REVIEW && 'Review Order'}
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Checkout Forms */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Delivery Address */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <MapPin className="h-5 w-5 mr-2" />
-                Delivery Address
-              </CardTitle>
-              <CardDescription>
-                Choose your delivery address or add a new one
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {addresses.length > 0 && (
-                <div className="space-y-3 mb-4">
-                  {addresses.map((address) => (
-                    <div
-                      key={address.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedAddress?.id === address.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedAddress(address)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center mb-2">
-                            <User className="h-4 w-4 mr-2" />
-                            <span className="font-medium">{address.fullName}</span>
-                            {address.isDefault && (
-                              <Badge variant="secondary" className="ml-2">
-                                Default
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center mb-1">
-                            <Phone className="h-4 w-4 mr-2" />
-                            <span className="text-sm text-gray-600">{address.phoneNumber}</span>
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {address.addressLine1}
-                            {address.addressLine2 && `, ${address.addressLine2}`}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {address.city}, {address.district}, {address.province}
-                            {address.postalCode && ` ${address.postalCode}`}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditAddress(address);
-                            }}
-                            disabled={loading}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteAddressClick(address);
-                            }}
-                            disabled={loading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+          {/* Step 1: User Details */}
+          {currentStep === CheckoutStep.USER_DETAILS && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  Contact & Delivery
+                </CardTitle>
+                <CardDescription>
+                  Enter your contact information to proceed with checkout
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUserDetailsSubmit} className="space-y-6">
+                  {/* Email Section */}
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={userDetails.email}
+                      onChange={(e) => setUserDetails(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Checkbox id="emailUpdates" />
+                      <Label htmlFor="emailUpdates" className="text-sm">
+                        Email me with updates and offers
+                      </Label>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {!showAddressForm && !showAddressSearch && !showUserDetailsForm && !showEditForm ? (
-                <div className="space-y-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddressSearch(true)}
-                    className="w-full"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Search Address
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddressForm(true)}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Address Manually
-                  </Button>
-                </div>
-              ) : showAddressSearch ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Search Address</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowAddressSearch(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
-                  <AddressSearch
-                    onAddressSelect={handleAddressSelect}
-                    onManualAddress={handleManualAddress}
-                  />
-                </div>
-              ) : showUserDetailsForm ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Enter Your Details</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleBackToAddressSearch}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {selectedParsedAddress && (
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Selected Address:</p>
-                      <p className="text-sm text-gray-600">
-                        {selectedParsedAddress.addressLine1}
-                        {selectedParsedAddress.addressLine2 && `, ${selectedParsedAddress.addressLine2}`}
-                        <br />
-                        {selectedParsedAddress.city}, {selectedParsedAddress.district}, {selectedParsedAddress.province}
-                      </p>
-                    </div>
-                  )}
 
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    handleSaveAddressWithUserDetails({
-                      fullName: formData.get('fullName') as string,
-                      phoneNumber: formData.get('phoneNumber') as string,
-                    });
-                  }} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="fullName">Full Name *</Label>
-                        <Input
-                          id="fullName"
-                          name="fullName"
-                          placeholder="Enter your full name"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="phoneNumber">Phone Number *</Label>
-                        <Input
-                          id="phoneNumber"
-                          name="phoneNumber"
-                          placeholder="e.g., 9841234567"
-                          required
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Enter 10-digit phone number (e.g., 9841234567)
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <Button type="submit" disabled={loading}>
-                        {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                        Save Address
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleBackToAddressSearch}
-                      >
-                        Back to Search
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setShowUserDetailsForm(false);
-                          setSelectedParsedAddress(null);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              ) : showEditForm ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Edit Address</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setShowEditForm(false);
-                        setEditingAddress(null);
-                        setAddressForm({
-                          fullName: '',
-                          phoneNumber: '',
-                          addressLine1: '',
-                          addressLine2: '',
-                          city: '',
-                          district: '',
-                          province: '',
-                          postalCode: '',
-                          isDefault: false,
-                        });
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <form onSubmit={handleUpdateAddress} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="editFullName">Full Name *</Label>
-                        <Input
-                          id="editFullName"
-                          value={addressForm.fullName}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, fullName: e.target.value }))}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editPhoneNumber">Phone Number *</Label>
-                        <Input
-                          id="editPhoneNumber"
-                          value={addressForm.phoneNumber}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="editAddressLine1">Address Line 1 *</Label>
-                      <Input
-                        id="editAddressLine1"
-                        value={addressForm.addressLine1}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, addressLine1: e.target.value }))}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="editAddressLine2">Address Line 2</Label>
-                      <Input
-                        id="editAddressLine2"
-                        value={addressForm.addressLine2}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, addressLine2: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="editCity">City *</Label>
-                        <Input
-                          id="editCity"
-                          value={addressForm.city}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editDistrict">District *</Label>
-                        <Input
-                          id="editDistrict"
-                          value={addressForm.district}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, district: e.target.value }))}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="editProvince">Province *</Label>
-                        <Input
-                          id="editProvince"
-                          value={addressForm.province}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, province: e.target.value }))}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="editPostalCode">Postal Code</Label>
-                      <Input
-                        id="editPostalCode"
-                        value={addressForm.postalCode}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, postalCode: e.target.value }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="editIsDefault"
-                        checked={addressForm.isDefault}
-                        onCheckedChange={(checked) => setAddressForm(prev => ({ ...prev, isDefault: checked as boolean }))}
-                      />
-                      <Label htmlFor="editIsDefault">Set as default address</Label>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <Button type="submit" disabled={loading}>
-                        {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                        Update Address
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setShowEditForm(false);
-                          setEditingAddress(null);
-                          setAddressForm({
-                            fullName: '',
-                            phoneNumber: '',
-                            addressLine1: '',
-                            addressLine2: '',
-                            city: '',
-                            district: '',
-                            province: '',
-                            postalCode: '',
-                            isDefault: false,
-                          });
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              ) : (
-                <form onSubmit={handleAddressSubmit} className="space-y-4">
+                  {/* Name Section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="fullName">Full Name *</Label>
+                      <Label htmlFor="firstName">First name *</Label>
                       <Input
-                        id="fullName"
-                        value={addressForm.fullName}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, fullName: e.target.value }))}
+                        id="firstName"
+                        placeholder="First name"
+                        value={userDetails.fullName.split(' ')[0] || ''}
+                        onChange={(e) => {
+                          const firstName = e.target.value;
+                          const lastName = userDetails.fullName.split(' ').slice(1).join(' ') || '';
+                          setUserDetails(prev => ({ 
+                            ...prev, 
+                            fullName: `${firstName} ${lastName}`.trim() 
+                          }));
+                        }}
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phoneNumber">Phone Number *</Label>
+                      <Label htmlFor="lastName">Last name *</Label>
                       <Input
-                        id="phoneNumber"
-                        value={addressForm.phoneNumber}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                        id="lastName"
+                        placeholder="Last name"
+                        value={userDetails.fullName.split(' ').slice(1).join(' ') || ''}
+                        onChange={(e) => {
+                          const firstName = userDetails.fullName.split(' ')[0] || '';
+                          const lastName = e.target.value;
+                          setUserDetails(prev => ({ 
+                            ...prev, 
+                            fullName: `${firstName} ${lastName}`.trim() 
+                          }));
+                        }}
                         required
                       />
                     </div>
                   </div>
 
+                  {/* Phone Section */}
                   <div>
-                    <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                    <Label htmlFor="phoneNumber">Phone *</Label>
                     <Input
-                      id="addressLine1"
-                      value={addressForm.addressLine1}
-                      onChange={(e) => setAddressForm(prev => ({ ...prev, addressLine1: e.target.value }))}
+                      id="phoneNumber"
+                      placeholder="+91 98765 43210"
+                      value={userDetails.phoneNumber}
+                      onChange={(e) => setUserDetails(prev => ({ ...prev, phoneNumber: e.target.value }))}
                       required
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="addressLine2">Address Line 2</Label>
-                    <Input
-                      id="addressLine2"
-                      value={addressForm.addressLine2}
-                      onChange={(e) => setAddressForm(prev => ({ ...prev, addressLine2: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Input
-                        id="city"
-                        value={addressForm.city}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="district">District *</Label>
-                      <Input
-                        id="district"
-                        value={addressForm.district}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, district: e.target.value }))}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="province">Province *</Label>
-                      <Input
-                        id="province"
-                        value={addressForm.province}
-                        onChange={(e) => setAddressForm(prev => ({ ...prev, province: e.target.value }))}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="postalCode">Postal Code</Label>
-                    <Input
-                      id="postalCode"
-                      value={addressForm.postalCode}
-                      onChange={(e) => setAddressForm(prev => ({ ...prev, postalCode: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="isDefault"
-                      checked={addressForm.isDefault}
-                      onCheckedChange={(checked) => setAddressForm(prev => ({ ...prev, isDefault: checked as boolean }))}
-                    />
-                    <Label htmlFor="isDefault">Set as default address</Label>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button type="submit" disabled={loading}>
-                      {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      Save Address
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowAddressForm(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+                  <Button type="submit" className="w-full">
+                    Continue to Address
+                  </Button>
                 </form>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Payment Method */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <CreditCard className="h-5 w-5 mr-2" />
-                Payment Method
-              </CardTitle>
-              <CardDescription>
-                Choose how you want to pay for your order
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {paymentMethods.map((method) => (
-                  <div
-                    key={method.id}
-                    className={`flex items-center space-x-3 p-4 border rounded-lg ${
-                      !method.available ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'
-                    } ${paymentMethod === method.id ? 'border-primary bg-primary/5' : ''}`}
-                    onClick={() => method.available && setPaymentMethod(method.id)}
+          {/* Step 2: Address Search */}
+          {currentStep === CheckoutStep.ADDRESS_SEARCH && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Delivery Address
+                </CardTitle>
+                <CardDescription>
+                  Search for your address or use current location
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AddressSearch
+                  onAddressSelect={handleAddressSelect}
+                  onManualAddress={() => setCurrentStep(CheckoutStep.ADDRESS_CONFIRM)}
+                />
+                
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentStep(CheckoutStep.USER_DETAILS)}
+                    className="mr-2"
                   >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={method.id}
-                      checked={paymentMethod === method.id}
-                      disabled={!method.available}
-                      onChange={() => method.available && setPaymentMethod(method.id)}
-                      className="h-4 w-4 text-primary"
-                    />
-                    <div className="flex items-center space-x-3 flex-1">
-                      {method.icon}
-                      <div className="flex-1">
-                        <Label htmlFor={method.id} className="font-medium">
-                          {method.name}
-                        </Label>
-                        <p className="text-sm text-gray-600">{method.description}</p>
-                      </div>
-                    </div>
-                    {!method.available && (
-                      <Badge variant="secondary">Coming Soon</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                    Back
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Special Instructions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Special Instructions</CardTitle>
-              <CardDescription>
-                Add any special instructions for delivery
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="e.g., Leave at front door, Call before delivery, etc."
-                value={specialInstructions}
-                onChange={(e) => setSpecialInstructions(e.target.value)}
-                rows={3}
-              />
-            </CardContent>
-          </Card>
+          {/* Step 3: Address Confirmation */}
+          {currentStep === CheckoutStep.ADDRESS_CONFIRM && (
+            <AddressConfirmationStep
+              selectedAddress={selectedParsedAddress}
+              userDetails={userDetails}
+              onConfirm={handleAddressConfirm}
+              onBack={() => setCurrentStep(CheckoutStep.ADDRESS_SEARCH)}
+            />
+          )}
+
+          {/* Step 4: Payment Method */}
+          {currentStep === CheckoutStep.PAYMENT && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CreditCard className="h-5 w-5 mr-2" />
+                  Payment Method
+                </CardTitle>
+                <CardDescription>
+                  Choose how you want to pay for your order
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {paymentMethods.map((method) => (
+                    <div
+                      key={method.id}
+                      className={`flex items-center space-x-3 p-4 border rounded-lg ${
+                        !method.available ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-300'
+                      } ${paymentMethod === method.id ? 'border-primary bg-primary/5' : ''}`}
+                      onClick={() => method.available && setPaymentMethod(method.id)}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={method.id}
+                        checked={paymentMethod === method.id}
+                        disabled={!method.available}
+                        onChange={() => method.available && setPaymentMethod(method.id)}
+                        className="h-4 w-4 text-primary"
+                      />
+                      <div className="flex items-center space-x-3 flex-1">
+                        {method.icon}
+                        <div className="flex-1">
+                          <Label htmlFor={method.id} className="font-medium">
+                            {method.name}
+                          </Label>
+                          <p className="text-sm text-gray-600">{method.description}</p>
+                        </div>
+                      </div>
+                      {!method.available && (
+                        <Badge variant="secondary">Coming Soon</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Special Instructions */}
+                <div className="mt-6">
+                  <Label htmlFor="specialInstructions">Special Instructions</Label>
+                  <Textarea
+                    id="specialInstructions"
+                    placeholder="e.g., Leave at front door, Call before delivery, etc."
+                    value={specialInstructions}
+                    onChange={(e) => setSpecialInstructions(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex space-x-2 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentStep(CheckoutStep.ADDRESS_CONFIRM)}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentStep(CheckoutStep.REVIEW)}
+                    className="flex-1"
+                  >
+                    Continue to Review
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 5: Review Order */}
+          {currentStep === CheckoutStep.REVIEW && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Review Your Order</CardTitle>
+                <CardDescription>
+                  Please review your order details before placing it
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Contact Information */}
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-medium mb-2">Contact Information</h4>
+                    <p className="text-sm text-gray-600">{userDetails.fullName}</p>
+                    <p className="text-sm text-gray-600">{userDetails.phoneNumber}</p>
+                    {userDetails.email && <p className="text-sm text-gray-600">{userDetails.email}</p>}
+                  </div>
+
+                  {/* Delivery Address */}
+                  {finalAddress && (
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-medium mb-2">Delivery Address</h4>
+                      <p className="text-sm text-gray-600">{finalAddress.fullName}</p>
+                      <p className="text-sm text-gray-600">{finalAddress.phoneNumber}</p>
+                      <p className="text-sm text-gray-600">{finalAddress.addressLine1}</p>
+                      {finalAddress.addressLine2 && <p className="text-sm text-gray-600">{finalAddress.addressLine2}</p>}
+                      <p className="text-sm text-gray-600">
+                        {finalAddress.city}, {finalAddress.district}, {finalAddress.province}
+                        {finalAddress.postalCode && ` ${finalAddress.postalCode}`}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Payment Method */}
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-medium mb-2">Payment Method</h4>
+                    <p className="text-sm text-gray-600">
+                      {paymentMethods.find(m => m.id === paymentMethod)?.name}
+                    </p>
+                  </div>
+
+                  {specialInstructions && (
+                    <div className="p-4 border rounded-lg">
+                      <h4 className="font-medium mb-2">Special Instructions</h4>
+                      <p className="text-sm text-gray-600">{specialInstructions}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex space-x-2 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentStep(CheckoutStep.PAYMENT)}
+                  >
+                    Back
+                  </Button>
+                  <LiquidButton
+                    onClick={handlePlaceOrder}
+                    disabled={loading}
+                    className="flex-1"
+                  >
+                    {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Place Order - ₹{total.toFixed(2)}
+                  </LiquidButton>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right Column - Order Summary */}
@@ -1044,7 +637,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-sm">
-                        ₹{parseFloat(item.product.discountPrice || item.product.price) * item.quantity}
+                        ₹{(parseFloat(item.product.discountPrice || item.product.price) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -1053,86 +646,62 @@ export default function CheckoutPage() {
 
               <Separator />
 
+              {/* Discount Code */}
+              <div className="space-y-2">
+                <Label htmlFor="discountCode">Discount Code</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="discountCode"
+                    placeholder="Discount code"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={handleApplyDiscount}
+                    disabled={isApplyingDiscount || !discountCode.trim()}
+                    className="px-4"
+                  >
+                    {isApplyingDiscount ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Apply'
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <Separator />
+
               {/* Price Breakdown */}
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>₹{subtotal}</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span>₹{deliveryFee}</span>
+                  <span>Shipping</span>
+                  <span>Calculated at next step</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span>-₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>₹{total}</span>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500">INR</div>
+                    <div>₹{total.toFixed(2)}</div>
+                  </div>
                 </div>
               </div>
-
-              {/* Place Order Button */}
-              <LiquidButton
-                onClick={handlePlaceOrder}
-                disabled={loading || !selectedAddress}
-                className="w-full"
-              >
-                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Place Order - ₹{total}
-              </LiquidButton>
-
-              {!selectedAddress && (
-                <p className="text-sm text-red-600 text-center">
-                  Please select a delivery address
-                </p>
-              )}
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      {showDeleteConfirm && addressToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="max-w-md mx-4">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Trash2 className="h-5 w-5 mr-2 text-red-500" />
-                Delete Address
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">
-                Are you sure you want to delete the address for <strong>{addressToDelete.fullName}</strong>?
-              </p>
-              <p className="text-sm text-gray-500 mb-6">
-                This action cannot be undone.
-              </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteAddress}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Delete
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setAddressToDelete(null);
-                  }}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

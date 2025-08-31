@@ -265,16 +265,16 @@ export default function ShopPage() {
                   </label>
                   <div className="px-1 py-2">
                     <Slider
-                      value={[filters.priceRange[0], filters.priceRange[1]]}
+                      value={[filters.priceRange[0]]}
                       onValueChange={(val) => handleFilterChange('priceRange', [val[0], val[1]])}
                       min={0}
                       max={10000}
-                      step={50}
-                      className="w-full"
+                      step={1}
+                      className="w-full slider bg-gray-900"
                     />
                     <div className="flex justify-between text-sm text-gray-600 mt-2">
                       <span>₹{filters.priceRange[0]}</span>
-                      <span>₹{filters.priceRange[1]}</span>
+                  
                     </div>
                   </div>
                 </div>
@@ -381,13 +381,8 @@ export default function ShopPage() {
               </div>
             )}
 
-            {/* Products Grid */}
-            {/* {error && (
-              <div className="text-center py-12">
-                <p className="text-red-600 mb-4">Error loading products. Please try again.</p>
-                <Button onClick={() => fetchProductsData(true)}>Retry</Button>
-              </div>
-            )} */}
+           
+            
 
             {!loading && products.length === 0 && (
               <div className="text-center py-12">

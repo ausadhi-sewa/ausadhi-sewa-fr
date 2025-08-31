@@ -13,6 +13,8 @@ export interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
+  requiresEmailConfirmation: boolean;
+  confirmationEmail: string | null;
 }
 
 export interface LoginFormData {

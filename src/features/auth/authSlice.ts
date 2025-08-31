@@ -7,6 +7,8 @@ const initialState: AuthState = {
   token: null,
   loading: false,
   error: null,
+  requiresEmailConfirmation: false,
+  confirmationEmail: null,
 };
 
 // Google sign in - Updated for server-side redirect
@@ -46,7 +48,17 @@ export const signup = createAsyncThunk(
     }
   }
 );
-
+export const resendEmail = createAsyncThunk(
+  'auth/resend',
+  async(email: string, { rejectWithValue }) => {
+    try {
+      const response = await authApi.resendEmail(email);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to resend email");
+    }
+  }
+);
 // Login
 export const login = createAsyncThunk(
   'auth/login',
@@ -95,8 +107,8 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.error = null;
-      // Clear token from localStorage
-      localStorage.removeItem('token');
+      state.requiresEmailConfirmation = false;
+      state.confirmationEmail = null;
     },
     clearError(state) {
       state.error = null;
@@ -106,10 +118,10 @@ const authSlice = createSlice({
     },
     setToken(state, action) {
       state.token = action.payload;
-      // Store token in localStorage
-      if (action.payload) {
-        localStorage.setItem('token', action.payload);
-      }
+    },
+    clearEmailConfirmation(state) {
+      state.requiresEmailConfirmation = false;
+      state.confirmationEmail = null;
     },
   },
   extraReducers: (builder) => {
@@ -134,10 +146,13 @@ const authSlice = createSlice({
       })
       .addCase(signup.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        // Store token in localStorage
-        localStorage.setItem('token', action.payload.token);
+        // Handle email confirmation response
+        if (action.payload.requiresEmailConfirmation) {
+          state.requiresEmailConfirmation = true;
+          state.confirmationEmail = action.payload.email || null;
+        } else {
+          state.user = action.payload.user;
+        }
       })
       .addCase(signup.rejected, (state, action) => {
         state.loading = false;
@@ -151,9 +166,6 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
-        // Store token in localStorage
-        localStorage.setItem('token', action.payload.token);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -185,15 +197,27 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.error = null;
-        // Clear token from localStorage
-        localStorage.removeItem('token');
       })
       .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Resend Email
+      .addCase(resendEmail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resendEmail.fulfilled, (state, action) => {
+        state.loading = false;
+        // Clear any previous errors on successful resend
+        state.error = null;
+      })
+      .addCase(resendEmail.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
   },
 });
 
-export const { logout, clearError, setUser, setToken } = authSlice.actions;
+export const { logout, clearError, setUser, setToken, clearEmailConfirmation } = authSlice.actions;
 export default authSlice.reducer; 

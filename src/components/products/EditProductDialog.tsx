@@ -35,6 +35,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { IconX } from "@tabler/icons-react";
 import type { Product } from "@/api/productApi";
 import type { Category } from "@/api/categoryApi";
+import { toast } from "sonner";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required").max(255),
@@ -121,8 +122,12 @@ export function EditProductDialog({ open, onOpenChange, product, categories }: E
         gallery: galleryImages.length > 0 ? galleryImages : undefined,
       };
 
-      await dispatch(updateProduct(productData)).unwrap();
-      
+      // await dispatch(updateProduct(productData)).unwrap();
+  toast.promise(async () => await dispatch(updateProduct(productData)).unwrap(), {
+    loading: "Updating product...",
+    success: "Product updated successfully",
+    error: "Failed to update product",
+  });
       // Reset form
       setProfileImage(null);
       setGalleryImages([]);

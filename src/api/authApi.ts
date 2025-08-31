@@ -21,6 +21,8 @@ export interface AuthResponse {
   user: any;
   token: string;
   message?: string;
+  requiresEmailConfirmation?: boolean;
+  email?: string;
 }
 
 export const authApi = {
@@ -49,7 +51,20 @@ export const authApi = {
       throw error;
     }
   },
-
+async resendEmail(email: string): Promise<{ success: boolean; message: string; data?: any }> {
+  console.log("[AUTH API]: Resend Mail Sending..");
+  try {
+    const response = await axios.post(`${API_URL}/auth/resend`, {
+      email
+    }, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("[AUTH API]: Resend email failed:", error);
+    throw error;
+  }
+},
   // Check current session
   async checkSession(): Promise<{ success: boolean; user?: any; message?: string }> {
     console.log('🔵 [AUTH API] Checking session status');

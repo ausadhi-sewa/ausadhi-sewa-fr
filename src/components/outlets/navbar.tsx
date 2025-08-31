@@ -5,20 +5,21 @@ import { IconMenuDeep, IconX } from "@tabler/icons-react";
 import logo from "../../assets/AusadhiSewa.logo.png"
 import { useAppDispatch,useAppSelector } from "@/utils/hooks";
 import { Link, useNavigate } from "react-router-dom";
-import {logoutUser,checkSession, login, signup, googleSignIn, clearError} from "@/features/auth/authSlice";
+import {logoutUser,checkSession, login, signup, googleSignIn, clearError, clearEmailConfirmation, resendEmail} from "@/features/auth/authSlice";
 import { Button, LiquidButton } from "../ui/liquid-glass-button";
 import CartIcon from "../cart/CartIcon";
 import CartDrawer from "../cart/CartDrawer";
 import { AuthDialog } from "../auth/AuthDialog";
 import { Package } from "lucide-react";
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem, SelectLabel, SelectGroup } from "@/components/ui/select";
+import { toast } from "sonner";
 export function Navbar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [authDialogOpen, setAuthDialogOpen] = React.useState(false);
   const [isSignup, setIsSignup] = React.useState(false);
   const dispatch = useAppDispatch();
-  const {user,loading,error} = useAppSelector((state)=>state.auth);
+  const {user,loading,error,requiresEmailConfirmation,confirmationEmail} = useAppSelector((state)=>state.auth);
   const navigate = useNavigate();
   React.useEffect(() => {
     dispatch(checkSession());
@@ -67,6 +68,27 @@ export function Navbar() {
     } catch (error) {
       console.error("Google authentication failed:", error);
     }
+  };
+
+  const handleResendEmail = async () => {
+    try {
+      if (!confirmationEmail) {
+        toast.error("No email address found for resending");
+        return;
+      }
+      
+      console.log("Resend Click for email:", confirmationEmail);
+      await dispatch(resendEmail(confirmationEmail)).unwrap();
+      toast.success("Confirmation email sent! Please check your inbox");
+    } catch (error: any) {
+      console.error("Resend email error:", error);
+      const errorMessage = typeof error === 'string' ? error : error.message || "Failed to resend email";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleCloseEmailConfirmation = () => {
+    dispatch(clearEmailConfirmation());
   };
 
   const navLinks = [
@@ -274,6 +296,10 @@ export function Navbar() {
         loading={loading}
         googleLoading={loading}
         error={error}
+        requiresEmailConfirmation={requiresEmailConfirmation}
+        confirmationEmail={confirmationEmail}
+        onResendEmail={handleResendEmail}
+        onCloseEmailConfirmation={handleCloseEmailConfirmation}
       />
 
       {/* Spacer to prevent content from hiding behind navbar */}

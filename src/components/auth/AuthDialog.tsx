@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { GoogleButton } from "./GoogleButton";
+import { EmailConfirmationDialog } from "./EmailConfirmationDialog";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -46,6 +47,10 @@ interface AuthDialogProps {
   loading?: boolean;
   googleLoading?: boolean;
   error?: string | null;
+  requiresEmailConfirmation?: boolean;
+  confirmationEmail?: string | null;
+  onResendEmail?: () => void;
+  onCloseEmailConfirmation?: () => void;
 }
 
 export function AuthDialog({ 
@@ -57,7 +62,11 @@ export function AuthDialog({
   onToggleMode,
   loading = false, 
   googleLoading = false,
-  error 
+  error,
+  requiresEmailConfirmation = false,
+  confirmationEmail,
+  onResendEmail,
+  onCloseEmailConfirmation
 }: AuthDialogProps) {
   const schema = isSignup ? signupSchema : loginSchema;
   
@@ -94,77 +103,63 @@ export function AuthDialog({
   const handleToggle = () => onToggleMode?.(!isSignup);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent key={isSignup ? "signup" : "login"} className="max-w-md ">
-        <DialogHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 bg-gradient-to-r from-medical-green-500 to-medical-blue-500 rounded-full flex items-center justify-center mb-4">
-            <span className="text-white font-bold text-xl">AS</span>
-          </div>
-          <DialogTitle className="text-2xl font-bold text-neutral-800">{title}</DialogTitle>
-          <DialogDescription className="text-neutral-600">{subtitle}</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent key={isSignup ? "signup" : "login"} className="max-w-md ">
+          <DialogHeader className="text-center space-y-2">
+            <div className="mx-auto w-12 h-12 bg-gradient-to-r from-medical-green-500 to-medical-blue-500 rounded-full flex items-center justify-center mb-4">
+              <span className="text-white font-bold text-xl">AS</span>
+            </div>
+            <DialogTitle className="text-2xl font-bold text-neutral-800">{title}</DialogTitle>
+            <DialogDescription className="text-neutral-600">{subtitle}</DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <IconAlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              {isSignup && (
+          <div className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <IconAlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                {isSignup && (
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Doe" {...field} />
+                        <Input type="email" placeholder="you@example.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {isSignup && (
+                
                 <FormField
                   control={form.control}
-                  name="confirmPassword"
+                  name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
+                      <FormLabel>Password</FormLabel>
                       <FormControl>
                         <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
@@ -172,43 +167,69 @@ export function AuthDialog({
                     </FormItem>
                   )}
                 />
-              )}
-              
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    {isSignup ? "Creating Account..." : "Signing In..."}
-                  </div>
-                ) : (
-                  isSignup ? "Create Account" : "Login"
+                
+                {isSignup && (
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              </Button>
-              <div className="text-center text-sm text-neutral-600">
-                <span>{isSignup ? "Already have an account?" : "Don't have an account?"} </span>
-                <button
-                  type="button"
-                  onClick={handleToggle}
-                  className="font-medium text-medical-green-600 hover:text-medical-green-700 underline underline-offset-2"
-                >
-                  {isSignup ? "Login" : "Sign Up"}
-                </button>
-              </div>
-            </form>
-          </Form>
+                
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      {isSignup ? "Creating Account..." : "Signing In..."}
+                    </div>
+                  ) : (
+                    isSignup ? "Create Account" : "Login"
+                  )}
+                </Button>
+                <div className="text-center text-sm text-neutral-600">
+                  <span>{isSignup ? "Already have an account?" : "Don't have an account?"} </span>
+                  <button
+                    type="button"
+                    onClick={handleToggle}
+                    className="font-medium text-medical-green-600 hover:text-medical-green-700 underline underline-offset-2"
+                  >
+                    {isSignup ? "Login" : "Sign Up"}
+                  </button>
+                </div>
+              </form>
+            </Form>
 
-          <Separator className="my-6" />
-          
-          <div className="text-center">
-            <p className="text-sm text-neutral-600 mb-4">Or continue with</p>
-            <GoogleButton 
-              onClick={onGoogleClick} 
-              loading={googleLoading}
-              children={isSignup ? "Sign up with Google" : "Sign in with Google"}
-            />
+            <Separator className="my-6" />
+            
+            <div className="text-center">
+              <p className="text-sm text-neutral-600 mb-4">Or continue with</p>
+              <GoogleButton 
+                onClick={onGoogleClick} 
+                loading={googleLoading}
+                children={isSignup ? "Sign up with Google" : "Sign in with Google"}
+              />
+            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Confirmation Dialog */}
+      {requiresEmailConfirmation && confirmationEmail && (
+        <EmailConfirmationDialog
+          open={requiresEmailConfirmation}
+          email={confirmationEmail}
+          onResendEmail={onResendEmail}
+          onClose={onCloseEmailConfirmation}
+        />
+      )}
+    </>
   );
 }

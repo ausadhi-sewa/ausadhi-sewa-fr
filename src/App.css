@@ -46,7 +46,7 @@
   --color-primary-foreground: #000000;
   --color-secondary: var(--color-medical-blue-500);
   --color-secondary-foreground: #ffffff;
-  --color-muted: #f4f4f5;
+  --color-muted: var(--color-medical-green-300);
   --color-muted-foreground: #71717a;
   --color-accent: var(--color-medical-green-400);
   --color-accent-foreground: #000000;

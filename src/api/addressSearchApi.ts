@@ -165,7 +165,7 @@ class AddressSearchService {
           'User-Agent': 'AusadhiSewa/1.0',
         },
       });
-
+console.log("REVERSE GEOCODING RESPONSE",response.data);
       return response.data;
     } catch (error) {
       console.error('Error reverse geocoding:', error);

@@ -17,11 +17,11 @@ import {
 import {
   ArrowLeft,
   ShoppingCart,
-  
   Package,
   Truck,
   Shield,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 
@@ -70,7 +70,7 @@ export default function ProductDetailsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-medical-green-500 mx-auto mb-4"></div>
+          <Loader2 className="w-10 h-10 animate-spin mx-auto mb-4" />
           <p className="text-lg text-neutral-600">Loading product details...</p>
         </div>
       </div>
