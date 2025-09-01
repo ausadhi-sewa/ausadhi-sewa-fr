@@ -14,15 +14,7 @@ export interface GuestCart {
   lastUpdated: string;
 }
 
-// User cart interface (for localStorage persistence)
-export interface UserCart {
-  items: GuestCartItem[];
-  lastUpdated: string;
-  userId: string;
-}
-
 const GUEST_CART_KEY = 'ausadhi_guest_cart';
-const USER_CART_KEY = 'ausadhi_user_cart';
 
 export const cartStorage = {
   // Get guest cart from localStorage
@@ -40,7 +32,7 @@ export const cartStorage = {
       console.error('Error reading guest cart from localStorage:', error);
     }
     
-    // Return empty cart if no valid cart found
+   
     return {
       items: [],
       lastUpdated: new Date().toISOString(),
@@ -57,47 +49,6 @@ export const cartStorage = {
       localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartToSave));
     } catch (error) {
       console.error('Error saving guest cart to localStorage:', error);
-    }
-  },
-
-  // Get user cart from localStorage
-  getUserCart(userId: string): UserCart | null {
-    try {
-      const stored = localStorage.getItem(`${USER_CART_KEY}_${userId}`);
-      if (stored) {
-        const cart = JSON.parse(stored) as UserCart;
-        // Validate cart structure
-        if (cart.items && Array.isArray(cart.items) && cart.userId === userId) {
-          return cart;
-        }
-      }
-    } catch (error) {
-      console.error('Error reading user cart from localStorage:', error);
-    }
-    
-    return null;
-  },
-
-  // Save user cart to localStorage
-  saveUserCart(userId: string, items: GuestCartItem[]): void {
-    try {
-      const cartToSave: UserCart = {
-        items,
-        lastUpdated: new Date().toISOString(),
-        userId,
-      };
-      localStorage.setItem(`${USER_CART_KEY}_${userId}`, JSON.stringify(cartToSave));
-    } catch (error) {
-      console.error('Error saving user cart to localStorage:', error);
-    }
-  },
-
-  // Clear user cart from localStorage
-  clearUserCart(userId: string): void {
-    try {
-      localStorage.removeItem(`${USER_CART_KEY}_${userId}`);
-    } catch (error) {
-      console.error('Error clearing user cart from localStorage:', error);
     }
   },
 
@@ -149,22 +100,34 @@ export const cartStorage = {
   // Clear guest cart
   clearGuestCart(): void {
     try {
+      console.log('🗑️ [CART STORAGE] Clearing guest cart');
       localStorage.removeItem(GUEST_CART_KEY);
+      console.log('✅ [CART STORAGE] Guest cart cleared successfully');
     } catch (error) {
-      console.error('Error clearing guest cart from localStorage:', error);
+      console.error('❌ [CART STORAGE] Error clearing guest cart:', error);
     }
   },
 
-  // Get guest cart items count
-  getGuestCartItemCount(): number {
+  // Get guest cart items for transfer to database
+  getGuestCartItemsForTransfer(): Array<{ productId: string; quantity: number }> {
     const cart = this.getGuestCart();
-    return cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  },
-
-  // Convert guest cart items to format expected by merge API
-  getGuestCartItemsForMerge(): Array<{ productId: string; quantity: number }> {
-    const cart = this.getGuestCart();
-    return cart.items.map(item => ({
+    console.log('📂 [CART STORAGE] Getting guest cart items for transfer:', {
+      itemCount: cart.items.length,
+      items: cart.items.map(item => ({ productId: item.id, quantity: item.quantity }))
+    });
+    
+    // Validate items before returning
+    const validItems = cart.items.filter(item => 
+      item.id && 
+      item.quantity > 0 && 
+      item.product
+    );
+    
+    if (validItems.length !== cart.items.length) {
+      console.warn('⚠️ [CART STORAGE] Some guest cart items were invalid and filtered out');
+    }
+    
+    return validItems.map(item => ({
       productId: item.id,
       quantity: item.quantity,
     }));
@@ -176,43 +139,14 @@ export const cartStorage = {
     return cart.items.length > 0;
   },
 
-  // Persist user cart to localStorage before logout
-  persistUserCartToLocalStorage(userId: string, items: GuestCartItem[]): void {
-    console.log('💾 [CART STORAGE] Persisting user cart to localStorage before logout:', {
-      userId,
-      itemCount: items.length
-    });
-    this.saveUserCart(userId, items);
-  },
-
-  // Load user cart from localStorage after logout
-  loadUserCartFromLocalStorage(userId: string): GuestCartItem[] {
-    const userCart = this.getUserCart(userId);
-    if (userCart) {
-      console.log('📂 [CART STORAGE] Loaded user cart from localStorage after logout:', {
-        userId,
-        itemCount: userCart.items.length
-      });
-      return userCart.items;
-    }
-    return [];
-  },
-
   // Clear all cart data (for testing or cleanup)
   clearAllCartData(): void {
     try {
-      // Clear guest cart
+      console.log('🗑️ [CART STORAGE] Clearing all cart data');
       localStorage.removeItem(GUEST_CART_KEY);
-      
-      // Clear all user carts
-      const keys = Object.keys(localStorage);
-      keys.forEach(key => {
-        if (key.startsWith(USER_CART_KEY)) {
-          localStorage.removeItem(key);
-        }
-      });
+      console.log('✅ [CART STORAGE] All cart data cleared successfully');
     } catch (error) {
-      console.error('Error clearing all cart data from localStorage:', error);
+      console.error('❌ [CART STORAGE] Error clearing all cart data:', error);
     }
   },
 }; 

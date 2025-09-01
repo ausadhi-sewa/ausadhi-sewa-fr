@@ -170,6 +170,13 @@ export const orderApi = {
     return response.data.data;
   },
 
+  // User cancels their own order
+  async userCancelOrder(orderId: string): Promise<Order> {
+    const authAxios = createAuthAxios();
+    const response = await authAxios.patch<OrderResponse>(`/orders/${orderId}/cancel`);
+    return response.data.data;
+  },
+
   // Update payment status (admin only)
   async updatePaymentStatus(orderId: string, paymentStatus: string): Promise<Order> {
     const authAxios = createAuthAxios();

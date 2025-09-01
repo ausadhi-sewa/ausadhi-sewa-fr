@@ -17,7 +17,9 @@ import {
   User,
   Calendar,
   FileText,
+  X,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -27,6 +29,7 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<boolean>(false);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -67,13 +70,29 @@ export default function OrderDetailsPage() {
 
   const derivedTracking = useMemo(() => {
     if (!order) return null;
-    const statusOrder = [
+    
+    // If order is cancelled, show a special cancelled state
+    if (order.status === 'cancelled') {
+      return {
+        estimatedDelivery: null,
+        steps: [
+          { 
+            status: 'cancelled', 
+            label: 'Order Cancelled', 
+            completed: true, 
+            time: formatDate(order.updatedAt) 
+          }
+        ],
+      };
+    }
+    
+    const statusOrder: Array<{ key: Order['status']; label: string }> = [
       { key: "pending", label: "Order Placed" },
       { key: "confirmed", label: "Order Confirmed" },
       { key: "processing", label: "Processing" },
       { key: "out_for_delivery", label: "Out for Delivery" },
       { key: "delivered", label: "Delivered" },
-    ] as const;
+    ];
 
     const currentIndex = statusOrder.findIndex((s) => s.key === order.status);
     const steps = statusOrder.map((s, idx) => ({
@@ -90,7 +109,7 @@ export default function OrderDetailsPage() {
     };
   }, [order]);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: Order['status']) => {
     switch (status) {
       case "confirmed":
         return <CheckCircle className="h-4 w-4 text-emerald-500" />;
@@ -100,12 +119,14 @@ export default function OrderDetailsPage() {
         return <Truck className="h-4 w-4 text-indigo-600" />;
       case "pending":
         return <AlertCircle className="h-4 w-4 text-amber-700" />;
+      case "cancelled":
+        return <X className="h-4 w-4 text-red-600" />;
       default:
         return <Package className="h-4 w-4 text-slate-400" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case "confirmed":
         return "bg-emerald-100 text-emerald-700 border-emerald-200";
@@ -117,8 +138,29 @@ export default function OrderDetailsPage() {
         return "bg-green-100 text-green-700 border-green-200";
       case "out_for_delivery":
         return "bg-indigo-100 text-indigo-700 border-indigo-200";
+      case "cancelled":
+        return "bg-red-100 text-red-700 border-red-200";
       default:
         return "bg-slate-100 text-slate-400";
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order || !id) return;
+    
+    if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      await orderApi.userCancelOrder(id);
+      setOrder(prev => prev ? { ...prev, status: 'cancelled' } : null);
+      toast.success("Order cancelled successfully");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to cancel order");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -214,9 +256,35 @@ export default function OrderDetailsPage() {
                   <Badge className="bg-amber-100 text-amber-700 border-amber-200 px-4 py-2 text-sm font-medium">
                     Payment {order.paymentStatus}
                   </Badge>
+                  {/* Cancel button - only show for cancellable orders */}
+                  {['pending', 'confirmed'].includes(order.status) && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleCancelOrder}
+                      disabled={cancelling}
+                      className="ml-4"
+                    >
+                      {cancelling ? (
+                        <>
+                          <Clock className="h-4 w-4 mr-2 animate-spin" />
+                          Cancelling...
+                        </>
+                      ) : (
+                        <>
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel Order
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
                 <p className="text-slate-700 text-lg">
-                  {order.status === "confirmed" ? "Your medical order has been confirmed and is being prepared for delivery." : "Your order update is shown below."}
+                  {order.status === "confirmed" 
+                    ? "Your medical order has been confirmed and is being prepared for delivery." 
+                    : order.status === "cancelled"
+                    ? "This order has been cancelled and will not be processed."
+                    : "Your order update is shown below."}
                 </p>
                 <div className="flex flex-wrap gap-6 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
@@ -237,15 +305,39 @@ export default function OrderDetailsPage() {
           </div>
 
           <div className="p-8 space-y-12">
-            <section>
-              <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-                <Truck className="h-6 w-6 text-blue-600" />
-                Delivery Progress
-              </h2>
-           
-              <div className="relative">
+            {/* Only show delivery progress for non-cancelled orders */}
+            {order.status !== 'cancelled' && (
+              <section>
+                <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                  <Truck className="h-6 w-6 text-blue-600" />
+                  Delivery Progress
+                </h2>
+             
+                <div className="relative">
                 {(() => {
                   const steps = derivedTracking?.steps || [];
+                  
+                  // For cancelled orders, show a simple cancelled state
+                  if (order.status === 'cancelled') {
+                    return (
+                      <div className="w-full">
+                        <div className="relative h-10">
+                          <div className="absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 bg-red-200" />
+                          <div className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-red-500" style={{ width: '100%' }} />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-7 h-7 rounded-full bg-red-500 border-2 border-red-500 flex items-center justify-center text-white">
+                              <X className="w-4 h-4" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-center">
+                          <p className="text-sm text-slate-800">Order Cancelled</p>
+                          <p className="text-xs text-slate-500">{formatDateShort(order.updatedAt)}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
                   const completedCount = steps.filter((s) => s.completed).length;
                   const progressPercent = steps.length > 1
                     ? Math.min(100, Math.max(0, ((completedCount - 1) / (steps.length - 1)) * 100))
@@ -291,6 +383,7 @@ export default function OrderDetailsPage() {
                 })()}
               </div>
             </section>
+            )}
 
             <section>
               <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">

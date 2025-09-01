@@ -6,19 +6,17 @@ import {
   removeFromGuestCart, 
   clearGuestCart,
   loadGuestCart,
-  loadUserCartFromLocalStorage,
-  persistUserCartToLocalStorage,
   setCurrentUserId,
   fetchUserCart,
   addToUserCart,
   updateUserCartItemQuantity,
   removeFromUserCart,
   clearUserCart,
-  mergeGuestCart,
   setAuthenticated,
   clearError,
 } from '../../features/cart/cartSlice';
 import type { Product } from '../../api/productApi';
+import { cartStorage } from '../cartStorage';
 
 export const useCart = () => {
   const dispatch = useAppDispatch();
@@ -40,41 +38,40 @@ export const useCart = () => {
       console.log('🔄 [CART HOOK] User authenticated, syncing cart from backend');
       dispatch(setAuthenticated(true));
       dispatch(setCurrentUserId(user.id));
-      dispatch(fetchUserCart());
-    } else if (!user && isAuthenticated) {
-      // User logged out, persist current cart to localStorage and switch to guest cart
-      console.log('🔄 [CART HOOK] User logged out, persisting cart to localStorage');
-      if (currentUserId && items.length > 0) {
-        dispatch(persistUserCartToLocalStorage(currentUserId));
+      
+      // Get guest cart items
+      const guestCartItems = cartStorage.getGuestCartItemsForTransfer();
+      
+      if (guestCartItems.length > 0) {
+        console.log('🔄 [CART HOOK] Transferring', guestCartItems.length, 'guest cart items to user cart');
+        
+        // Transfer each guest item to user cart (backend will handle duplicates)
+        guestCartItems.forEach(item => {
+          dispatch(addToUserCart({ 
+            productId: item.productId, 
+            quantity: item.quantity 
+          }));
+        });
+        
+        // Clear guest cart after successful transfer
+        cartStorage.clearGuestCart();
+      } else {
+        console.log('🔄 [CART HOOK] No guest cart items, fetching user cart from database');
+        dispatch(fetchUserCart());
       }
+    } else if (!user && isAuthenticated) {
+      // User logged out, clear cart state and switch to guest cart
+      console.log('🔄 [CART HOOK] User logged out, switching to guest cart');
       dispatch(setAuthenticated(false));
       dispatch(setCurrentUserId(null));
-      dispatch(loadGuestCart());
+      dispatch(clearUserCart()); // Clear Redux state
+      dispatch(loadGuestCart()); // Load guest cart from localStorage
     } else if (!user && !isAuthenticated && items.length === 0) {
       // No user and no items, load guest cart from localStorage
       console.log('🔄 [CART HOOK] Loading guest cart from localStorage');
       dispatch(loadGuestCart());
     }
   }, [user, isAuthenticated, dispatch, items.length, currentUserId]);
-
-  // Handle login - merge guest cart with user cart
-  useEffect(() => {
-    if (user && isAuthenticated && lastSynced === null) {
-      // User just logged in, merge guest cart
-      // This will replace user cart with guest cart items
-      console.log('🔄 [CART HOOK] User just logged in, merging guest cart');
-      dispatch(mergeGuestCart());
-    }
-  }, [user, isAuthenticated, lastSynced, dispatch]);
-
-  // Handle logout - persist user cart to localStorage
-  useEffect(() => {
-    if (!user && currentUserId && items.length > 0) {
-      // User just logged out, persist cart to localStorage
-      console.log('🔄 [CART HOOK] User logged out, persisting cart to localStorage');
-      dispatch(persistUserCartToLocalStorage(currentUserId));
-    }
-  }, [user, currentUserId, items.length, dispatch]);
 
   // Add item to cart
   const addToCart = useCallback((product: Product, quantity: number = 1) => {

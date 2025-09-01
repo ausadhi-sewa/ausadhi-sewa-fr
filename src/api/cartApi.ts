@@ -50,9 +50,7 @@ export interface GuestCartItem {
   quantity: number;
 }
 
-export interface MergeGuestCartRequest {
-  guestCartItems: GuestCartItem[];
-}
+
 
 // API Response types
 export interface CartResponse {
@@ -121,12 +119,5 @@ export const cartApi = {
     return response.data.data;
   },
 
-  // Merge guest cart with user cart
-  async mergeGuestCart(guestCartItems: GuestCartItem[]): Promise<Cart> {
-    const authAxios = createAuthAxios();
-    const response = await authAxios.post<CartResponse>('/cart/merge-guest', {
-      guestCartItems,
-    });
-    return response.data.data;
-  },
+
 }; 

@@ -120,24 +120,7 @@ export const clearUserCart = createAsyncThunk(
   }
 );
 
-export const mergeGuestCart = createAsyncThunk(
-  'cart/mergeGuestCart',
-  async (_, { rejectWithValue }) => {
-    try {
-      const guestCartItems = cartStorage.getGuestCartItemsForMerge();
-      if (guestCartItems.length === 0) {
-        return null; // No items to merge
-      }
-      
-      const cart = await cartApi.mergeGuestCart(guestCartItems);
-      // Clear guest cart after successful merge
-      cartStorage.clearGuestCart();
-      return cart;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to merge guest cart');
-    }
-  }
-);
+
 
 const cartSlice = createSlice({
   name: 'cart',
@@ -203,23 +186,7 @@ const cartSlice = createSlice({
       state.currentUserId = null;
     },
 
-    // Load user cart from localStorage (after logout)
-    loadUserCartFromLocalStorage: (state, action: PayloadAction<string>) => {
-      const userId = action.payload;
-      const userCartItems = cartStorage.loadUserCartFromLocalStorage(userId);
-      state.items = userCartItems;
-      state.isAuthenticated = false;
-      state.lastSynced = null;
-      state.currentUserId = null;
-    },
 
-    // Persist user cart to localStorage (before logout)
-    persistUserCartToLocalStorage: (state, action: PayloadAction<string>) => {
-      const userId = action.payload;
-      if (state.items.length > 0) {
-        cartStorage.persistUserCartToLocalStorage(userId, state.items);
-      }
-    },
 
     // Set current user ID
     setCurrentUserId: (state, action: PayloadAction<string | null>) => {
@@ -352,28 +319,7 @@ const cartSlice = createSlice({
         state.error = action.payload as string;
       })
       
-      // Merge guest cart
-      .addCase(mergeGuestCart.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(mergeGuestCart.fulfilled, (state, action) => {
-        state.loading = false;
-        if (action.payload) {
-          state.items = action.payload.items.map((item: CartItem) => ({
-            id: item.id,
-            product: transformCartProductToProduct(item.product),
-            quantity: item.quantity,
-            addedAt: item.addedAt,
-          }));
-          state.isAuthenticated = true;
-          state.lastSynced = new Date().toISOString();
-        }
-      })
-      .addCase(mergeGuestCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      });
+
   },
 });
 
@@ -383,8 +329,6 @@ export const {
   removeFromGuestCart,
   clearGuestCart,
   loadGuestCart,
-  loadUserCartFromLocalStorage,
-  persistUserCartToLocalStorage,
   setCurrentUserId,
   openCart,
   closeCart,
