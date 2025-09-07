@@ -31,7 +31,6 @@ export const authApi = {
 
     try {
       const response = await axios.post(`${API_URL}/auth/signup`, data);
-      console.log('🟢 [AUTH API] Signup successful:', { user: response.data.user?.email });
       return response.data;
     } catch (error: any) {
       console.error('🔴 [AUTH API] Signup failed:', error.response?.data || error.message);
@@ -44,7 +43,6 @@ export const authApi = {
 
     try {
       const response = await axios.post(`${API_URL}/auth/signin`, data);
-      console.log('🟢 [AUTH API] Login successful:', { user: response.data.user?.email });
       return response.data;
     } catch (error: any) {
       console.error('🔴 [AUTH API] Login failed:', error.response?.data || error.message);
@@ -61,7 +59,7 @@ async resendEmail(email: string): Promise<{ success: boolean; message: string; d
     });
     return response.data;
   } catch (error: any) {
-    console.error("[AUTH API]: Resend email failed:", error);
+      
     throw error;
   }
 },
@@ -73,7 +71,7 @@ async resendEmail(email: string): Promise<{ success: boolean; message: string; d
         withCredentials: true // Include cookies
       });
 
-      
+
       return response.data;
     } catch (error: any) {
 

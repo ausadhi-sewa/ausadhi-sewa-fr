@@ -10,10 +10,7 @@ import { HomePage, DashboardPage, ProductDetailsPage, CheckoutPage, OrdersPage, 
 import { AuthGate } from './components/auth/AuthGate';
 // Callback component for Google OAuth
 const AuthCallback = () => {
-  console.log('🔵 [AUTH CALLBACK] Callback component rendered');
-  console.log('🔵 [AUTH CALLBACK] Current URL:', window.location.href);
-  console.log('🔵 [AUTH CALLBACK] URL search params:', window.location.search);
-  console.log('🔵 [AUTH CALLBACK] URL hash:', window.location.hash);
+
   
   // This component will be rendered if the backend redirects here
   // You can add logic to handle the callback if needed

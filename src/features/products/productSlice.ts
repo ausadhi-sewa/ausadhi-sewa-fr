@@ -37,7 +37,7 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (filters: ProductFilters = {}) => {
     const response = await productApi.getProducts(filters);
-    console.log('🔵 [PRODUCT_SLICE] Fetching products:', response.data);
+        
     return response.data;
   }
 );
@@ -46,7 +46,7 @@ export const fetchFeaturedProducts = createAsyncThunk(
   'products/fetchFeaturedProducts',
   async (limit: number = 8) => {
     const response = await productApi.getFeaturedProducts({ limit });
-    console.log('🔵 [PRODUCT_SLICE] Fetching featured products:', response.data);
+    console.log("RESPONSE",response.data);
     return response.data;
   }
 );

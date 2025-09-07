@@ -97,7 +97,7 @@ export function Navbar() {
         return;
       }
 
-      console.log("Resend Click for email:", confirmationEmail);
+                
       await dispatch(resendEmail(confirmationEmail)).unwrap();
       toast.success("Confirmation email sent! Please check your inbox");
     } catch (error: any) {

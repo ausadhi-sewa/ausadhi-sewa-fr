@@ -15,14 +15,14 @@ const initialState: AuthState = {
 export const googleSignIn = createAsyncThunk(
   'auth/googleSignIn',
   async (_, { rejectWithValue }) => {
-    console.log('🔵 [AUTH SLICE] Starting Google sign-in thunk');
+
     try {
       // For server-side redirect, we need to navigate to the backend endpoint
       // The backend will handle the OAuth flow and redirect to Google
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
       const googleAuthUrl = `${apiUrl}/auth/google`;
       
-      console.log('🟢 [AUTH SLICE] Redirecting to backend Google auth endpoint:', googleAuthUrl);
+                                   
       
       // Redirect to backend endpoint which will handle the OAuth flow
       window.location.href = googleAuthUrl;
@@ -30,7 +30,7 @@ export const googleSignIn = createAsyncThunk(
       // This will never be reached due to redirect, but we need to return something
       return { success: true, message: 'Redirecting to Google OAuth' };
     } catch (error: any) {
-      console.error('🔴 [AUTH SLICE] Google sign-in thunk error:', error);
+                                            
       return rejectWithValue(error.response?.data?.message || 'Google sign in failed');
     }
   }
@@ -78,7 +78,7 @@ export const checkSession = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await authApi.checkSession();
-      console.log("RESPONSE",response);
+     
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Session check failed');
