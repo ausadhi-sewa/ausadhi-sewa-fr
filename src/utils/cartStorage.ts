@@ -1,4 +1,5 @@
-import type { Product } from '../api/productApi';
+import { toast } from "sonner";
+import type { Product } from "../api/productApi";
 
 // Guest cart item interface
 export interface GuestCartItem {
@@ -14,7 +15,7 @@ export interface GuestCart {
   lastUpdated: string;
 }
 
-const GUEST_CART_KEY = 'ausadhi_guest_cart';
+const GUEST_CART_KEY = "ausadhi_guest_cart";
 
 export const cartStorage = {
   // Get guest cart from localStorage
@@ -29,10 +30,9 @@ export const cartStorage = {
         }
       }
     } catch (error) {
-      console.error('Error reading guest cart from localStorage:', error);
+      console.error("Error reading guest cart from localStorage:", error);
     }
-    
-   
+
     return {
       items: [],
       lastUpdated: new Date().toISOString(),
@@ -48,15 +48,15 @@ export const cartStorage = {
       };
       localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartToSave));
     } catch (error) {
-      console.error('Error saving guest cart to localStorage:', error);
+      console.error("Error saving guest cart to localStorage:", error);
     }
   },
 
   // Add item to guest cart
   addToGuestCart(product: Product, quantity: number = 1): GuestCart {
     const cart = this.getGuestCart();
-    const existingItem = cart.items.find(item => item.id === product.id);
-    
+    const existingItem = cart.items.find((item) => item.id === product.id);
+
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
@@ -67,7 +67,7 @@ export const cartStorage = {
         addedAt: new Date().toISOString(),
       });
     }
-    
+
     this.saveGuestCart(cart);
     return cart;
   },
@@ -75,16 +75,16 @@ export const cartStorage = {
   // Update guest cart item quantity
   updateGuestCartItemQuantity(productId: string, quantity: number): GuestCart {
     const cart = this.getGuestCart();
-    
+
     if (quantity <= 0) {
-      cart.items = cart.items.filter(item => item.id !== productId);
+      cart.items = cart.items.filter((item) => item.id !== productId);
     } else {
-      const item = cart.items.find(item => item.id === productId);
+      const item = cart.items.find((item) => item.id === productId);
       if (item) {
         item.quantity = quantity;
       }
     }
-    
+
     this.saveGuestCart(cart);
     return cart;
   },
@@ -92,7 +92,7 @@ export const cartStorage = {
   // Remove item from guest cart
   removeFromGuestCart(productId: string): GuestCart {
     const cart = this.getGuestCart();
-    cart.items = cart.items.filter(item => item.id !== productId);
+    cart.items = cart.items.filter((item) => item.id !== productId);
     this.saveGuestCart(cart);
     return cart;
   },
@@ -100,34 +100,31 @@ export const cartStorage = {
   // Clear guest cart
   clearGuestCart(): void {
     try {
-      console.log('🗑️ [CART STORAGE] Clearing guest cart');
       localStorage.removeItem(GUEST_CART_KEY);
-      console.log('✅ [CART STORAGE] Guest cart cleared successfully');
     } catch (error) {
-      console.error('❌ [CART STORAGE] Error clearing guest cart:', error);
+      toast.error("Failed to clear guest cart");
     }
   },
 
   // Get guest cart items for transfer to database
-  getGuestCartItemsForTransfer(): Array<{ productId: string; quantity: number }> {
+  getGuestCartItemsForTransfer(): Array<{
+    productId: string;
+    quantity: number;
+  }> {
     const cart = this.getGuestCart();
-    console.log('📂 [CART STORAGE] Getting guest cart items for transfer:', {
-      itemCount: cart.items.length,
-      items: cart.items.map(item => ({ productId: item.id, quantity: item.quantity }))
-    });
-    
+
     // Validate items before returning
-    const validItems = cart.items.filter(item => 
-      item.id && 
-      item.quantity > 0 && 
-      item.product
+    const validItems = cart.items.filter(
+      (item) => item.id && item.quantity > 0 && item.product
     );
-    
+
     if (validItems.length !== cart.items.length) {
-      console.warn('⚠️ [CART STORAGE] Some guest cart items were invalid and filtered out');
+      console.warn(
+        "⚠️ [CART STORAGE] Some guest cart items were invalid and filtered out"
+      );
     }
-    
-    return validItems.map(item => ({
+
+    return validItems.map((item) => ({
       productId: item.id,
       quantity: item.quantity,
     }));
@@ -142,11 +139,10 @@ export const cartStorage = {
   // Clear all cart data (for testing or cleanup)
   clearAllCartData(): void {
     try {
-      console.log('🗑️ [CART STORAGE] Clearing all cart data');
       localStorage.removeItem(GUEST_CART_KEY);
-      console.log('✅ [CART STORAGE] All cart data cleared successfully');
+      toast.success("All cart data cleared successfully");
     } catch (error) {
-      console.error('❌ [CART STORAGE] Error clearing all cart data:', error);
+      toast.error("Failed to clear all cart data");
     }
   },
-}; 
+};

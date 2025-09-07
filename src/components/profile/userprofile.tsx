@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../utils/hooks';
 import { 
@@ -10,7 +10,6 @@ import {
   LogOut, 
   ChevronRight,
   Calendar,
-  Clock,
   Phone,
   Mail
 } from 'lucide-react';

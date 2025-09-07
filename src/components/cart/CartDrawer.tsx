@@ -73,16 +73,7 @@ export default function CartDrawer() {
     navigate('/checkout');
   };
 
-  // Debug information
-  console.log('🛒 [CART DRAWER] Cart State:', {
-    itemCount: items.length,
-    totalItems,
-    isAuthenticated,
-    user: user ? user.id : 'none',
-    isEmpty,
-    loading,
-    error: error ? 'Yes' : 'No'
-  });
+  
 
   return (
     <Drawer open={isOpen} onOpenChange={handleClose}>

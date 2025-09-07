@@ -27,10 +27,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div className="min-h-screen bg-gradient-to-r from-transparent via-medical-green-200 to-transparent flex items-center justify-center p-4">
+          <div className="max-w-md w-full rounded-2xl  p-8 text-center">
             <div className="mb-6">
-              <div className="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+              <div className="w-32 h-32 mx-auto  rounded-full flex items-center justify-center">
                 <span className="text-4xl">🐱</span>
               </div>
             </div>
@@ -66,3 +66,5 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return this.props.children;
   }
 }
+
+

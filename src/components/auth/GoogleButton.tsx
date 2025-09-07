@@ -20,7 +20,7 @@ export function GoogleButton({ onClick, children = "Sign in with Google", loadin
     <Button
       type="button"
       variant="outline"
-      className="w-full flex items-center gap-2 hover:text-black"
+      className="w-full flex bg-gray-200 hover:bg-gray-300 items-center gap-2 rounded-4xl shadow-2xl hover:text-black"
       onClick={onClick}
       disabled={loading}
     >

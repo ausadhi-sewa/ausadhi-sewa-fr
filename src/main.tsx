@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
@@ -7,18 +6,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { store } from './store/store';
 
 // Import pages
-import HomePage from './pages/HomePage';
-import DashboardPage from './pages/admin/DashboardPage';
-import ProductsPage from './pages/ProductsPage';
-import ProductDetailsPage from './pages/ProductDetailsPage';
-import CheckoutPage from './pages/CheckoutPage';
-import OrdersPage from './pages/admin/OrdersPage';
-import ShopPage from './pages/ShopPage';
-import UserProfile from './components/profile/userprofile';
-import MyOrders from './components/profile/MyOrders';
-import OrderDetails from './components/profile/OrderDetails';
-import MyAddresses from './components/profile/MyAddresses';
-import Productcategories from './components/categories/Productcategories';
+import { HomePage, DashboardPage, ProductDetailsPage, CheckoutPage, OrdersPage, ShopPage, UserProfile, MyOrders, OrderDetails, MyAddresses, Productcategories, NotFoundPage, AboutPage, TermsPage, PrivacyPage, Statistics } from './pages';
 import { AuthGate } from './components/auth/AuthGate';
 // Callback component for Google OAuth
 const AuthCallback = () => {
@@ -66,13 +54,18 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: '/admin/statistics',
+        element: (
+            <AuthGate redirectTo='/admin/statistics'>
+            <Statistics/>
+          </AuthGate>
+        ),
+      },
+      {
         path: '/shop',
         element: <ShopPage />,
       },
-      {
-        path: '/products',
-        element: <ProductsPage />,
-      },
+      
       {
         path: '/category/:categoryId',
         element: <Productcategories />,
@@ -104,6 +97,34 @@ const router = createBrowserRouter([
       {
         path: '/profile/addresses',
         element: <MyAddresses />,
+      },
+      {
+        path: '/products',
+        element: <ShopPage />,
+      },
+      {
+        path: '/about',
+        element: <AboutPage />,
+      },
+      {
+        path: '/terms',
+        element: <TermsPage />,
+      },
+      {
+        path: '/privacy',
+        element: <PrivacyPage />,
+      },
+      {
+        path: '/help',
+        element: <NotFoundPage />, // Placeholder - you can create a proper help page later
+      },
+      {
+        path: '/contact',
+        element: <NotFoundPage />, // Placeholder - you can create a proper contact page later
+      },
+      {
+        path: '*',
+        element: <NotFoundPage />,
       },
     ],
   },

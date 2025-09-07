@@ -2,10 +2,12 @@ import { Outlet } from 'react-router-dom';
 import { Footer } from './components/outlets/footer';
 import { Navbar } from './components/outlets/navbar';
 import { Toaster } from 'sonner';
-import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import  {ErrorBoundary}  from './components/ui/ErrorBoundary';
+import { useCartInitialization } from './utils/hooks/useCartInitailization';
 function App() {
+  useCartInitialization();
   return (
-    // <ErrorBoundary>
+    <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-r from-transparent via-medical-green-200 to-transparent flex flex-col">
         <Toaster 
           position="top-right" 
@@ -20,7 +22,7 @@ function App() {
         </main>
         <Footer />
       </div>
-    // </ErrorBoundary>
+     </ErrorBoundary> 
   );
 }
 

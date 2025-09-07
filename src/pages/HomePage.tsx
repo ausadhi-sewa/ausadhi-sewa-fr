@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, ChevronLeft, ChevronRight, Star, Pill, Leaf, Stethoscope, Package, Heart, Eye, ShoppingCart } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Pill, Leaf, Stethoscope, Package, Heart, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../utils/hooks';
 import { fetchProducts } from '../features/products/productSlice';
 import { fetchCategories } from '../features/categories/categorySlice';
@@ -8,7 +8,13 @@ import { useCart } from '../utils/hooks/useCart';
 import type { Product, ProductFilters } from '../api/productApi';
 import heroImage from '../assets/hero-removebg-preview.png';
 import ProductCard from '@/components/products/ProductCard';
-import { toast } from 'sonner';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
@@ -27,7 +33,7 @@ export default function HomePage() {
   useEffect(() => {
     dispatch(fetchProducts(filters));
     dispatch(fetchCategories());
-  }, [dispatch, filters]);
+  }, []);
 
   const handlePageChange = (newPage: number) => {
     setFilters(prev => ({ ...prev, page: newPage }));
@@ -86,7 +92,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
  {/* Hero Banner */}
- <section className="relative bg-gradient-to-r from-medical-green-500 via-medical-green-600 to-medical-green-700 py-8 px-4 overflow-hidden border-b border-gray-100 rounded-2xl ">
+ <section className=" mx-auto max-w-7xl relative bg-gradient-to-r from-medical-green-500 via-medical-green-600 to-medical-green-700 py-8 px-4 overflow-hidden border-b border-gray-100 rounded-2xl  ">
         {/* Background decorative elements */}
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-medical-green-600 opacity-30 rounded-full transform translate-x-64 -translate-y-64"></div>
@@ -116,28 +122,40 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-<section className="  py-8 border-b border-gray-100">
+<section className="py-8 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
-         
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-            {categories.slice(0, 16).map((category) => {
-              const IconComponent = categoryIcons[category.slug] || Package;
-              return (
-                <div 
-                  key={category.id}
-                  onClick={() => handleCategoryClick(category.id)}
-                  className="flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md group"
-                >
-                  <div className="w-12 h-12 bg-medical-green-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-medical-green-200 transition-colors duration-200">
-                    <IconComponent className="w-6 h-6 text-medical-green-600" />
-                  </div>
-                  <span className="text-xs text-gray-700 text-center font-medium leading-tight">
-                    {category.name}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          <h2 className="text-2xl font-bold text-neutral-800 mb-6 "> Categories</h2>
+          
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {categories.map((category) => {
+                const IconComponent = categoryIcons[category.slug] || Package;
+                return (
+                  <CarouselItem key={category.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/6 xl:basis-1/8">
+                    <div 
+                      onClick={() => handleCategoryClick(category.id)}
+                      className="flex flex-col items-center p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md group  border border-gray-100"
+                    >
+                      <div className="w-12 h-12 bg-medical-green-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-medical-green-200 transition-colors duration-200">
+                        <IconComponent className="w-6 h-6 text-medical-green-600" />
+                      </div>
+                      <span className="text-xs text-gray-700 text-center font-medium leading-tight">
+                        {category.name}
+                      </span>
+                    </div>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <CarouselPrevious className="left-4" />
+            <CarouselNext className="right-4" />
+          </Carousel>
         </div>
       </section>
       {/* Main Content */}

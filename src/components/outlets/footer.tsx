@@ -1,44 +1,30 @@
-import React from 'react';
+
 import { Link } from 'react-router-dom';
 import { 
   Phone, 
   Mail, 
   MapPin, 
-  Clock, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Linkedin,
-  Heart,
-  Shield,
-  Truck,
-  Award
 } from 'lucide-react';
 import logo from '../../assets/AusadhiSewa.logo.png';
-
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
+  // Primary navigational links that exist in the app today
   const quickLinks = [
+    
     { name: 'About Us', path: '/about' },
-    { name: 'Careers', path: '/careers' },
-    { name: 'FAQ', path: '/faq' },
+    { name: 'Terms of Service', path: '/terms' },
     { name: 'Privacy Policy', path: '/privacy' },
-    { name: 'Terms of Service', path: '/terms' }
   ];
 
   const exploreLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Shop', path: '/shop' },
     { name: 'All Products', path: '/products' },
-    { name: 'Prescription', path: '/category/prescription' },
-    { name: 'OTC', path: '/category/otc' },
-    { name: 'Wellness', path: '/category/wellness' }
   ];
 
-  const resourcesLinks = [
-    { name: 'Blog', path: '/blog' },
-    { name: 'How To Order', path: '/how-to-order' },
-    { name: 'Support', path: '/support' }
-  ];
+  // Keep resources minimal for now
+  const resourcesLinks: Array<{ name: string; path: string }> = [];
 
   return (
     <footer className="bg-gradient-to-r from-transparent via-medical-green-200-50 to-transparent text-neutral-800 shadow-lg">
@@ -57,12 +43,12 @@ export function Footer() {
                 </div>
               </div>
             </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {/* Brand Logo and Contact Info */}
           <div className="lg:col-span-1">
             
-            
+         
             {/* Contact Info */}
             <div>
               <h4 className="text-lg font-bold text-neutral-800 mb-4">Contact Info</h4>
@@ -124,21 +110,23 @@ export function Footer() {
           </div>
 
           {/* Resources Links */}
-          <div>
-            <h4 className="text-lg font-bold text-neutral-800 mb-4">Resources</h4>
-            <ul className="space-y-2">
-              {resourcesLinks.map((link) => (
-                <li key={link.name}>
-                  <Link 
-                    to={link.path}
-                    className="text-neutral-700 hover:text-medical-green-600 transition-colors duration-200 text-sm"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {resourcesLinks.length > 0 && (
+            <div>
+              <h4 className="text-lg font-bold text-neutral-800 mb-4">Resources</h4>
+              <ul className="space-y-2">
+                {resourcesLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link 
+                      to={link.path}
+                      className="text-neutral-700 hover:text-medical-green-600 transition-colors duration-200 text-sm"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 

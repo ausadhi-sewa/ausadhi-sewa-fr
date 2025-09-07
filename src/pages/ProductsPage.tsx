@@ -58,16 +58,8 @@ export default function ProductsPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Memoized product cards for better performance
-  const memoizedProductCards = React.useMemo(() => {
-    return products.map((product, index) => (
-      <ProductCard 
-        key={product.id} 
-        product={product}
-        isLast={index === products.length - 1}
-      />
-    ));
-  }, [products]);
+  
+  
 
   // API filters
   const apiFilters: ProductFilters = {
@@ -209,9 +201,9 @@ export default function ProductsPage() {
           </div>
           
           {/* Discount Badge */}
-          {product.discountPrice && parseFloat(product.discountPrice) < parseFloat(product.price) && (
+          {product.discountPrice && product.discountPrice < product.price && (
             <Badge className="absolute top-2 right-2 bg-red-500 text-white">
-              {Math.round(((parseFloat(product.price) - parseFloat(product.discountPrice)) / parseFloat(product.price)) * 100)}% OFF
+              {Math.round(((product.price - product.discountPrice) /product.price) * 100)}% OFF
             </Badge>
           )}
           
@@ -257,7 +249,7 @@ export default function ProductsPage() {
             <span className="text-lg font-bold text-primary">
               ₹{product.discountPrice || product.price}
             </span>
-            {product.discountPrice && parseFloat(product.discountPrice) < parseFloat(product.price) && (
+            {product.discountPrice && product.discountPrice < product.price && (
               <span className="text-sm text-gray-400 line-through">
                 ₹{product.price}
               </span>
@@ -282,7 +274,15 @@ export default function ProductsPage() {
       </Card>
     </div>
   );
-
+  const memoizedProductCards = React.useMemo(() => {
+    return products.map((product, index) => (
+      <ProductCard 
+        key={product.id} 
+        product={product}
+        isLast={index === products.length - 1}
+      />
+    ));
+  }, [products]);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}

@@ -95,7 +95,7 @@ export function AuthDialog({
     }
   };
 
-  const title = isSignup ? "Create Account" : "Sign In";
+  const title = isSignup ? "Create Account" : "Welcome Back !";
   const subtitle = isSignup 
     ? "Enter your details to create a new account" 
     : "Enter your credentials to access your account";
@@ -105,16 +105,26 @@ export function AuthDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent key={isSignup ? "signup" : "login"} className="max-w-md ">
+        <DialogContent key={isSignup ? "signup" : "login"} className="max-w-md rounded-4xl">
           <DialogHeader className="text-center space-y-2">
-            <div className="mx-auto w-12 h-12 bg-gradient-to-r from-medical-green-500 to-medical-blue-500 rounded-full flex items-center justify-center mb-4">
-              <span className="text-white font-bold text-xl">AS</span>
-            </div>
-            <DialogTitle className="text-2xl font-bold text-neutral-800">{title}</DialogTitle>
-            <DialogDescription className="text-neutral-600">{subtitle}</DialogDescription>
+          
+            <DialogTitle className="text-2xl font-bold text-center text-neutral-800">{title}</DialogTitle>
+            <DialogDescription className="text-neutral-600 text-center">{subtitle}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
+          <div className="text-center">
+             
+             <GoogleButton 
+               onClick={onGoogleClick} 
+               loading={googleLoading}
+               children={isSignup ? "Continue with Google" : "Continue with Google"}
+             />
+                <Separator className="my-6" />
+              <p className="text-sm text-neutral-600 mb-4">Or continue with</p>
+           </div>
+          
+        
             {error && (
               <Alert variant="destructive">
                 <IconAlertCircle className="h-4 w-4" />
@@ -184,7 +194,7 @@ export function AuthDialog({
                   />
                 )}
                 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full rounded-4xl shadow-2xl bg-accent" disabled={loading}>
                   {loading ? (
                     <div className="flex items-center gap-2">
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -206,17 +216,6 @@ export function AuthDialog({
                 </div>
               </form>
             </Form>
-
-            <Separator className="my-6" />
-            
-            <div className="text-center">
-              <p className="text-sm text-neutral-600 mb-4">Or continue with</p>
-              <GoogleButton 
-                onClick={onGoogleClick} 
-                loading={googleLoading}
-                children={isSignup ? "Sign up with Google" : "Sign in with Google"}
-              />
-            </div>
           </div>
         </DialogContent>
       </Dialog>

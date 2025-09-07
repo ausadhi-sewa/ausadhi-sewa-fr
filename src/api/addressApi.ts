@@ -70,7 +70,7 @@ export const addressApi = {
     const response = await authAxios.get<AddressesResponse>('/addresses');
     
     if (response.status !== 200) {
-      throw new Error(response.data?.error || 'Failed to get addresses');
+      throw new Error('Failed to get addresses');
     }
     
     return response.data.data;
@@ -82,7 +82,7 @@ export const addressApi = {
     const response = await authAxios.get<AddressResponse>('/addresses/default');
     
     if (response.status !== 200) {
-      throw new Error(response.data?.error || 'Failed to get default address');
+      throw new Error('Failed to get default address');
     }
     
     return response.data.data;
@@ -94,7 +94,7 @@ export const addressApi = {
     const response = await authAxios.post<AddressResponse>('/addresses', data);
     
     if (response.status !== 201 && response.status !== 200) {
-      throw new Error(response.data?.error || 'Failed to create address');
+      throw new Error('Failed to create address');
     }
     
     return response.data.data;
@@ -106,7 +106,7 @@ export const addressApi = {
     const response = await authAxios.put<AddressResponse>(`/addresses/${addressId}`, data);
     
     if (response.status !== 200) {
-      throw new Error(response.data?.error || 'Failed to update address');
+      throw new Error('Failed to update address');
     }
     
     return response.data.data;
