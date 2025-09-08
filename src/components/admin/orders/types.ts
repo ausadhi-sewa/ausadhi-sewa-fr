@@ -49,7 +49,7 @@ export interface OrderPaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export interface OrderStatus {
+export interface OrderStatusOptions {
   value: string;
   label: string;
   color: string;
