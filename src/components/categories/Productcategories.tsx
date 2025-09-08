@@ -43,8 +43,9 @@ export default function Productcategories() {
         return (
         <div>
             <h1>Products</h1>  
-            {/* {loading && <div><Skeleton className="w-full bg-gray-200 h-10 animate-pulse" /></div>}
-            {error && <div>Error: {error}</div>} */}
+
+            {/* {loading && <div><Skeleton className="w-full bg-gray-200 h-10 animate-pulse" /></div>}*/}
+            {error && <div>Error: {error}</div>} 
             <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {/* {products.length === 0 && <div>No products found</div>} */}
             {products.map((product) => (

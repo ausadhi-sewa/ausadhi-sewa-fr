@@ -1,5 +1,4 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../utils/hooks';
 import { closeCart } from '../../features/cart/cartSlice';
 import { useCart } from '../../utils/hooks/useCart';
@@ -8,12 +7,10 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
@@ -33,7 +30,7 @@ export default function CartDrawer() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isOpen } = useAppSelector((state) => state.cart);
-  const { user } = useAppSelector((state) => state.auth);
+
   
   const {
     items,

@@ -30,7 +30,13 @@ export interface OrderAddress {
   province: string;
   postalCode: string | null;
 }
-
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'processing'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'cancelled';
 export interface Order {
   id: string;
   orderNumber: string;
@@ -39,7 +45,7 @@ export interface Order {
   deliveryFee: string;
   discount: string;
   total: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  status: OrderStatus;
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod: 'cash_on_delivery' | 'online_payment';
   specialInstructions?: string;

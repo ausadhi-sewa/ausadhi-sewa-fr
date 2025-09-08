@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAppDispatch } from '../../utils/hooks';
 import { openCart } from '../../features/cart/cartSlice';
 import { useCart } from '../../utils/hooks/useCart';

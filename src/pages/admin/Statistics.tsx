@@ -6,8 +6,8 @@ import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import { useAppSelector } from "@/utils/hooks";
 
 export default function Statistics() {
-    const { user, loading } = useAppSelector((state) => state.auth);
-  const { products, loading: productsLoading } = useAppSelector(
+    const { user } = useAppSelector((state) => state.auth);
+  const { products } = useAppSelector(
     (state) => state.products
   );
   const { categories } = useAppSelector(

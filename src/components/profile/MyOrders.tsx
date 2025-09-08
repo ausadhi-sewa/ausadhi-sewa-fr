@@ -5,13 +5,11 @@ import { orderApi, type Order, type OrderFilters } from '../../api/orderApi';
 import { 
   Package, 
   Eye, 
-  Calendar, 
-  MapPin, 
+  Calendar,  
   CreditCard, 
   Truck,
   ArrowLeft,
   Filter,
-  Search,
   ChevronRight,
   Clock,
   CheckCircle,
@@ -19,9 +17,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent,  CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -29,7 +27,7 @@ const orderStatusConfig = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   confirmed: { label: 'Confirmed', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
   processing: { label: 'Processing', color: 'bg-purple-100 text-purple-800', icon: Package },
-  shipped: { label: 'Shipped', color: 'bg-indigo-100 text-indigo-800', icon: Truck },
+  out_for_delivery: { label: 'Out for Delivery', color: 'bg-indigo-100 text-indigo-800', icon: Truck },
   delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
 };
@@ -295,12 +293,12 @@ export default function MyOrders() {
                             Order #{order.id}
                           </span>
                         </div>
-                        <Badge className={orderStatusConfig[order.status]?.color}>
+                        <Badge className={orderStatusConfig[order.status as keyof typeof orderStatusConfig]?.color}>
                           {getStatusIcon(order.status)}
-                          <span className="ml-1">{orderStatusConfig[order.status]?.label}</span>
+                          <span className="ml-1">{orderStatusConfig[order.status as keyof typeof orderStatusConfig]?.label}</span>
                         </Badge>
-                        <Badge className={paymentStatusConfig[order.paymentStatus]?.color}>
-                          {paymentStatusConfig[order.paymentStatus]?.label}
+                        <Badge className={paymentStatusConfig[order.paymentStatus as keyof typeof paymentStatusConfig]?.color}>
+                          {paymentStatusConfig[order.paymentStatus as keyof typeof paymentStatusConfig]?.label}
                         </Badge>
                       </div>
 

@@ -4,12 +4,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, AlertCircle, Package } from "lucide-react";
 import {
-  OrderStatistics,
   OrderFilters as OrderFiltersComponent,
   OrderTable,
   OrderDetailsModal,
   OrderPagination,
-  type OrderStatisticsProps,
 } from "../../components/admin/orders";
 
 export default function OrdersPage() {

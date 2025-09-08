@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { orderApi, type Order } from "@/api/orderApi";
+import { orderApi, type Order, type OrderStatus } from "@/api/orderApi";
 import { useAppSelector } from "@/utils/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,12 +86,13 @@ export default function OrderDetailsPage() {
       };
     }
     
-    const statusOrder: Array<{ key: Order['status']; label: string }> = [
+    const statusOrder: Array<{ key: OrderStatus; label: string }> = [
       { key: "pending", label: "Order Placed" },
       { key: "confirmed", label: "Order Confirmed" },
       { key: "processing", label: "Processing" },
       { key: "out_for_delivery", label: "Out for Delivery" },
       { key: "delivered", label: "Delivered" },
+      {key: "cancelled", label: "Cancelled" },
     ];
 
     const currentIndex = statusOrder.findIndex((s) => s.key === order.status);
@@ -318,7 +319,7 @@ export default function OrderDetailsPage() {
                   const steps = derivedTracking?.steps || [];
                   
                   // For cancelled orders, show a simple cancelled state
-                  if (order.status === 'cancelled') {
+                  if (order.status as OrderStatus === 'cancelled') {
                     return (
                       <div className="w-full">
                         <div className="relative h-10">

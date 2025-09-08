@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,9 +38,9 @@ import {
   User,
   MoreHorizontal,
 } from 'lucide-react';
-import type { OrderTableProps, OrderStatus, PaymentStatus } from './types';
+import type { OrderTableProps, OrderStatusOptions, PaymentStatus } from './types';
 
-const orderStatuses: OrderStatus[] = [
+const orderStatuses: OrderStatusOptions[] = [
   {
     value: "pending",
     label: "Pending",
@@ -88,7 +87,6 @@ const paymentStatuses: PaymentStatus[] = [
 
 export default function OrderTable({
   orders,
-  loading,
   selectedOrder,
   showStaffAssignment,
   staffId,

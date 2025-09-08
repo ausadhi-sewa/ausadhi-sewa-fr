@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi, type SignupData, type LoginData } from '../../api/authApi';
-import type { AuthState, User } from './types.auth';
+import type { AuthState } from './types.auth';
 
 const initialState: AuthState = {
   user: null,
@@ -131,7 +131,7 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(googleSignIn.fulfilled, (state, action) => {
+      .addCase(googleSignIn.fulfilled, (state) => {
         state.loading = false;
         // The redirect is handled in the thunk itself
       })
@@ -207,7 +207,7 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(resendEmail.fulfilled, (state, action) => {
+      .addCase(resendEmail.fulfilled, (state) => {
         state.loading = false;
         // Clear any previous errors on successful resend
         state.error = null;

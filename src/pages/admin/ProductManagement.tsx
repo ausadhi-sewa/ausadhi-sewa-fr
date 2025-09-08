@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {  useState } from "react";
+
 import { useAppDispatch, useAppSelector } from "../../utils/hooks";
-import { logoutUser } from "../../features/auth/authSlice";
+
 import {
-  fetchProducts,
   deleteProduct,
 } from "../../features/products/productSlice";
-import { fetchCategories } from "../../features/categories/categorySlice";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Note: Tabs component needs to be created or imported from a UI library

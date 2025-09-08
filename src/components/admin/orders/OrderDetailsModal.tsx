@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Card,
   CardContent,
@@ -9,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Package } from 'lucide-react';
 import type { OrderDetailsModalProps } from './types';
 
-export default function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
+export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
   if (!order) return null;
 
   const formatDate = (dateString: string) => {

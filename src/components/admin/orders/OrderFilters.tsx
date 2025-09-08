@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,9 +14,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Download } from 'lucide-react';
-import type { OrderFiltersProps, OrderStatus, PaymentStatus } from './types';
+import type { OrderFiltersProps, OrderStatusOptions, PaymentStatus } from './types';
 
-const orderStatuses: OrderStatus[] = [
+const orderStatuses: OrderStatusOptions[] = [
   {
     value: "pending",
     label: "Pending",

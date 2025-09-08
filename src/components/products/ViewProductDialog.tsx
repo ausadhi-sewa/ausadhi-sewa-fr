@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,9 +16,9 @@ interface ViewProductDialogProps {
 }
 
 export function ViewProductDialog({ open, onOpenChange, product }: ViewProductDialogProps) {
-  const formatPrice = (price: string) => {
-    return `₹${parseFloat(price).toFixed(2)}`;
-  };
+  // const formatPrice = (price: string) => {
+  //   return `₹${parseFloat(price).toFixed(2)}`;
+  // };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -66,11 +65,11 @@ export function ViewProductDialog({ open, onOpenChange, product }: ViewProductDi
               <div>
                 <p className="text-sm font-medium text-neutral-600">Price</p>
                 <p className="text-lg font-semibold text-medical-green-600">
-                  {formatPrice(product.price)}
+                  {`₹${product.price}`}
                 </p>
                 {product.discountPrice && (
                   <p className="text-sm text-red-600 line-through">
-                    {formatPrice(product.discountPrice)}
+                    {`₹${product.discountPrice}`}
                   </p>
                 )}
               </div>

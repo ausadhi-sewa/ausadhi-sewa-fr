@@ -21,8 +21,6 @@ export type ReviewDetails = {
 
 export function ReviewAndPay({
   details,
-  subtotal,
-  delivery,
   onBack,
   onPlaceOrder,
 }: {
@@ -32,7 +30,7 @@ export function ReviewAndPay({
   onBack: () => void
   onPlaceOrder: () => void
 }) {
-  const total = subtotal + delivery
+
 
   return (
     <div className="rounded-xl border border-teal-100 bg-white/80 shadow-sm backdrop-blur-sm">

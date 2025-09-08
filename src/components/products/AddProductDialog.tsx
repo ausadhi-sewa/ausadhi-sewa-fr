@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import {IconX} from '@tabler/icons-react'
 import { useAppDispatch } from "@/utils/hooks";
 import { createProduct } from "@/features/products/productSlice";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { IconUpload, IconX } from "@tabler/icons-react";
 import type { Category } from "@/api/categoryApi";
 
 const productSchema = z.object({
