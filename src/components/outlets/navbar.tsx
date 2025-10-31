@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { IconMenuDeep, IconX } from "@tabler/icons-react";
-import logo from "../../assets/AusadhiSewa.logo.png";
+import logo from "../../assets/pioneeraushadhisewa.webp";
 import { useAppDispatch, useAppSelector } from "@/utils/hooks";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -133,14 +133,14 @@ export function Navbar() {
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center gap-2">
               {/* Medical logo icon (Tabler Heartbeat) */}
-              <img src={logo} alt="Ausadhi Sewa" className="w-16 h-16" />
+              <img src={logo} alt="Pioneer Aushadhi Sewa" className="w-16 h-16" />
               <a
                 href="/"
                 className={`text-2xl font-bold transition-colors duration-300 ${
                   isScrolled ? "text-gray-900" : "text-gray-900"
                 }`}
               >
-                Ausadhi Sewa
+                Pioneer Aushadhi Sewa
               </a>
             </div>
 

@@ -65,6 +65,9 @@ export const login = createAsyncThunk(
   async (payload: LoginData, { rejectWithValue }) => {
     try {
       const response = await authApi.login(payload);
+      // Persist tokens to localStorage
+      if (response.accessToken) localStorage.setItem('accessToken', response.accessToken);
+      if (response.refreshToken) localStorage.setItem('refreshToken', response.refreshToken);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
@@ -77,7 +80,8 @@ export const checkSession = createAsyncThunk(
   'auth/checkSession',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await authApi.checkSession();
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || undefined : undefined;
+      const response = await authApi.checkSession(token);
      
       return response;
     } catch (error: any) {
@@ -91,7 +95,12 @@ export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await authApi.logout();
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || undefined : undefined;
+      const response = await authApi.logout(token);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      }
       return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Logout failed');
@@ -166,6 +175,7 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
+        state.token = action.payload.accessToken || null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -180,7 +190,7 @@ const authSlice = createSlice({
         state.loading = false;
         if (action.payload.success && action.payload.user) {
           state.user = action.payload.user;
-          state.token = action.payload.user.id; // Use user ID as token for session-based auth
+          state.token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
         }
       })
       .addCase(checkSession.rejected, (state, action) => {

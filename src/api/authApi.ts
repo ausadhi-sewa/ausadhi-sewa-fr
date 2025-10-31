@@ -19,7 +19,8 @@ export interface LoginData {
 
 export interface AuthResponse {
   user: any;
-  token: string;
+  accessToken?: string;
+  refreshToken?: string;
   message?: string;
   requiresEmailConfirmation?: boolean;
   email?: string;
@@ -43,7 +44,7 @@ export const authApi = {
 
     try {
       const response = await axios.post(`${API_URL}/auth/signin`, data);
-      return response.data;
+      return response.data.data || response.data;
     } catch (error: any) {
       console.error('🔴 [AUTH API] Login failed:', error.response?.data || error.message);
       throw error;
@@ -64,11 +65,12 @@ async resendEmail(email: string): Promise<{ success: boolean; message: string; d
   }
 },
   // Check current session
-  async checkSession(): Promise<{ success: boolean; user?: any; message?: string }> {
+  async checkSession(token?: string): Promise<{ success: boolean; user?: any; message?: string }> {
 
     try {
       const response = await axios.get(`${API_URL}/auth/session`, {
-        withCredentials: true // Include cookies
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: !token,
       });
 
 
@@ -80,11 +82,12 @@ async resendEmail(email: string): Promise<{ success: boolean; message: string; d
   },
 
   // Logout
-  async logout(): Promise<{ success: boolean; message: string }> {
+  async logout(token?: string): Promise<{ success: boolean; message: string }> {
 
     try {
       const response = await axios.post(`${API_URL}/auth/logout`, {}, {
-        withCredentials: true // Include cookies
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        withCredentials: !token,
       });
 
       return response.data;

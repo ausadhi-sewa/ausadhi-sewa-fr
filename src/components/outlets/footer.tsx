@@ -5,7 +5,7 @@ import {
   Mail, 
   MapPin, 
 } from 'lucide-react';
-import logo from '../../assets/AusadhiSewa.logo.png';
+import logo from '../../assets/pioneeraushadhisewa.webp';
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -34,7 +34,7 @@ export function Footer() {
               <div className="flex items-center mb-3">
                 <img 
                   src={logo} 
-                  alt="Ausadhi Sewa" 
+                  alt="Pioneer Aushadhi Sewa" 
                   className="h-24 w-auto mr-3"
                 />
                 <div>

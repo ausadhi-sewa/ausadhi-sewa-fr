@@ -92,7 +92,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
  {/* Hero Banner */}
- <section className=" mx-auto max-w-7xl relative bg-gradient-to-r from-medical-green-500 via-medical-green-600 to-medical-green-700 py-8 px-4 overflow-hidden border-b border-gray-100 rounded-2xl  ">
+ <section className=" mx-auto max-w-7xl relative bg-gradient-to-r from-medical-green-500 via-medical-green-600 to-medical-green-700 py-8 px-4 overflow-hidden border-b border-gray-100 rounded-4xl  ">
         {/* Background decorative elements */}
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-medical-green-600 opacity-30 rounded-full transform translate-x-64 -translate-y-64"></div>
