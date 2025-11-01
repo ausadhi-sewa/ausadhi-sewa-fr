@@ -10,7 +10,7 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent className="prose prose-neutral max-w-none">
             <p>
-              AusadhiSewa is a modern online pharmacy focused on fast, reliable medicine delivery
+              Pioneer Ausadhi Sewa is a modern online pharmacy focused on fast, reliable medicine delivery
               and a smooth shopping experience. We aim to make healthcare more accessible by
               combining verified products with helpful information and customer-first support.
             </p>
