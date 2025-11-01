@@ -57,19 +57,19 @@ export function Footer() {
                   <div className="w-8 h-8 bg-button-color rounded-full flex items-center justify-center">
                     <MapPin className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm text-neutral-700">44 Lalitpur Rd, Buddhanagar, Kathmandu 44600, Nepal</span>
+                  <span className="text-sm text-neutral-700">Murli-12 Birgunj Nepal</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-button-color rounded-full flex items-center justify-center">
                     <Phone className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm text-neutral-700">+977 1-591-2222</span>
+                  <span className="text-sm text-neutral-700">+977 9705467105</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-button-color rounded-full flex items-center justify-center">
                     <Mail className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm text-neutral-700">info@ausadhisewa.com</span>
+                  <span className="text-sm text-neutral-700">pioneeraushadhisewa@gmail.com</span>
                 </div>
               </div>
             </div>

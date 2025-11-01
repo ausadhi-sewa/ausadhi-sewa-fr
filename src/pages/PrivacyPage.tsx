@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             <h3>5. Your Rights</h3>
             <ul>
               <li>Access, update, or delete your data where applicable.</li>
-              <li>Contact us for privacy requests at <strong>privacy@ausadhisewa.com</strong>.</li>
+              <li>Contact us for privacy requests at <strong>pioneeraushadhisewa@gmail.com</strong>.</li>
             </ul>
           </CardContent>
         </Card>

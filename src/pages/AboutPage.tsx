@@ -6,7 +6,7 @@ export default function AboutPage() {
       <section className="mx-auto w-full max-w-5xl px-4 py-10">
         <Card className="bg-transparent">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-neutral-900">About AusadhiSewa</CardTitle>
+            <CardTitle className="text-3xl font-bold text-neutral-900">About Pioneer AusadhiSewa</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-neutral max-w-none">
             <p>
@@ -23,7 +23,7 @@ export default function AboutPage() {
             </ul>
             <h3>Contact</h3>
             <p>
-              Have questions? Reach us at <strong>info@ausadhisewa.com</strong> or call
+              Have questions? Reach us at <strong>pioneeraushadhisewa@gmail.com</strong> or call
               <strong> +977 1-591-2222</strong>.
             </p>
           </CardContent>
