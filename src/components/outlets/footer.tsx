@@ -35,10 +35,10 @@ export function Footer() {
                 <img 
                   src={logo} 
                   alt="Pioneer Aushadhi Sewa" 
-                  className="h-24 w-auto mr-3"
+                  className="h-24 w-auto mr-3 rounded-full"
                 />
                 <div>
-                  <h3 className="text-xl font-bold text-medical-green-700">AusadhiSewa</h3>
+                  <h3 className="text-xl font-bold text-medical-green-700">Pioneer Aushadhi Sewa</h3>
                   <p className="text-sm text-medical-green-600 font-medium">MEDICINE DELIVERY</p>
                 </div>
               </div>
