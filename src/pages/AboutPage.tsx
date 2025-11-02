@@ -24,7 +24,7 @@ export default function AboutPage() {
             <h3>Contact</h3>
             <p>
               Have questions? Reach us at <strong>pioneeraushadhisewa@gmail.com</strong> or call
-              <strong> +977 1-591-2222</strong>.
+              <strong> +977 9705467105</strong>.
             </p>
           </CardContent>
         </Card>
