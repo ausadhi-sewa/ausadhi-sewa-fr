@@ -65,6 +65,7 @@ export function AddCategoryDialog({
 
       // Reset form
       form.reset();
+      setCategoryImage(null);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create category:", error);
