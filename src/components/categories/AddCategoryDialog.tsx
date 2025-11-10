@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,11 +23,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { IconX } from "@tabler/icons-react";
+import { Label } from "@radix-ui/react-label";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Category name is required").max(255),
   description: z.string().optional(),
-  image: z.string().optional(),
 });
 
 type CategoryFormData = z.infer<typeof categorySchema>;
@@ -37,8 +38,12 @@ interface AddCategoryDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps) {
+export function AddCategoryDialog({
+  open,
+  onOpenChange,
+}: AddCategoryDialogProps) {
   const dispatch = useAppDispatch();
+  const [categoryImage, setCategoryImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CategoryFormData>({
@@ -46,15 +51,18 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
     defaultValues: {
       name: "",
       description: "",
-      image: "",
     },
   });
 
   const onSubmit = async (data: CategoryFormData) => {
     try {
       setIsSubmitting(true);
-      await dispatch(createCategory(data)).unwrap();
-      
+      const categoriesData = {
+        ...data,
+        image: categoryImage || undefined,
+      };
+      await dispatch(createCategory(categoriesData)).unwrap();
+
       // Reset form
       form.reset();
       onOpenChange(false);
@@ -65,6 +73,17 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
     }
   };
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setCategoryImage(file);
+    }
+  };
+
+  const handleImageRemove = ()=>{
+    setCategoryImage(null);
+  }
+  console.log(categoryImage);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -108,21 +127,53 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            />  <div>
+            <Label>Category Image</Label>
+            <div className="mt-2">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                name="image"
+                className="cursor-pointer"
+              />
+            </div>
+            {categoryImage && (
+              <div className="mt-2 flex items-center gap-2">
+                <img
+                  src={URL.createObjectURL(categoryImage)}
+                  alt="Category preview"
+                  className="w-24 h-24 object-cover rounded border"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleImageRemove}
+                >
+                  <IconX className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="image"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Image URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                    <Input
+                      type="file"
+                      placeholder="https://example.com/image.jpg"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             <DialogFooter>
               <Button
@@ -142,4 +193,4 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
       </DialogContent>
     </Dialog>
   );
-} 
+}

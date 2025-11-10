@@ -13,7 +13,7 @@ export interface Category {
   name: string;
   slug: string;
   description?: string;
-  image?: string;
+  image?: File | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,7 +22,7 @@ export interface Category {
 export interface CreateCategoryData {
   name: string;
   description?: string;
-  image?: string;
+  image?: File | null;
 }
 
 export interface UpdateCategoryData extends Partial<CreateCategoryData> {
@@ -46,14 +46,47 @@ export const categoryApi = {
 
   // Create category (Admin only)
   async createCategory(data: CreateCategoryData) {
-    const response = await api.post('/categories', data);
+    const formData = new FormData();
+    
+    formData.append('name', data.name);
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+   
+    if (data.image) {
+      formData.append('image', data.image);
+    }
+
+    const response = await api.post('/categories', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
-  // Update category (Admin only)
+
   async updateCategory(data: UpdateCategoryData) {
     const { id, ...updateData } = data;
-    const response = await api.put(`/categories/${id}`, updateData);
+    const formData = new FormData();
+    
+
+    if (updateData.name) {
+      formData.append('name', updateData.name);
+    }
+    if (updateData.description !== undefined) {
+      formData.append('description', updateData.description || '');
+    }
+  
+    if (updateData.image) {
+      formData.append('image', updateData.image);
+    }
+
+    const response = await api.put(`/categories/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
