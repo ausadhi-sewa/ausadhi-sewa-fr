@@ -23,9 +23,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { IconX } from "@tabler/icons-react";
 import { Label } from "@radix-ui/react-label";
-
+import FileUploader from "@/components/categories/file-uploader";
 const categorySchema = z.object({
   name: z.string().min(1, "Category name is required").max(255),
   description: z.string().optional(),
@@ -74,17 +73,10 @@ export function AddCategoryDialog({
     }
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setCategoryImage(file);
-    }
-  };
 
-  const handleImageRemove = ()=>{
-    setCategoryImage(null);
-  }
-  console.log(categoryImage);
+
+  console.log(categoryImage); // TODO: remove this
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -128,53 +120,14 @@ export function AddCategoryDialog({
                   <FormMessage />
                 </FormItem>
               )}
-            />  <div>
+            /> 
+             <div>
             <Label>Category Image</Label>
-            <div className="mt-2">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                name="image"
-                className="cursor-pointer"
-              />
-            </div>
-            {categoryImage && (
-              <div className="mt-2 flex items-center gap-2">
-                <img
-                  src={URL.createObjectURL(categoryImage)}
-                  alt="Category preview"
-                  className="w-24 h-24 object-cover rounded border"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleImageRemove}
-                >
-                  <IconX className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
+            <FileUploader onImageChange={setCategoryImage} />
+          
           </div>
 
-            {/* <FormField
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      placeholder="https://example.com/image.jpg"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
+         
 
             <DialogFooter>
               <Button
