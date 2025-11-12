@@ -22,8 +22,6 @@ export const googleSignIn = createAsyncThunk(
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
       const googleAuthUrl = `${apiUrl}/auth/google`;
       
-                                   
-      
       // Redirect to backend endpoint which will handle the OAuth flow
       window.location.href = googleAuthUrl;
       

@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {IconX} from '@tabler/icons-react'
 import { useAppDispatch } from "@/utils/hooks";
 import { createProduct } from "@/features/products/productSlice";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Category } from "@/api/categoryApi";
-
+import FileUploader from "../categories/file-uploader";
+import ProductImageUploader from "./product-image-uploader";
+import type {FileWithPreview} from "@/utils/hooks/use-file-upload";
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required").max(255),
   description: z.string().optional(),
@@ -64,7 +65,7 @@ interface AddProductDialogProps {
 export function AddProductDialog({ open, onOpenChange, categories }: AddProductDialogProps) {
   const dispatch = useAppDispatch();
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [galleryImages, setGalleryImages] = useState<File[]>([]);
+  const [galleryImages, setGalleryImages] = useState<FileWithPreview[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ProductFormData>({
@@ -87,11 +88,13 @@ export function AddProductDialog({ open, onOpenChange, categories }: AddProductD
   const onSubmit = async (data: ProductFormData) => {
     try {
       setIsSubmitting(true);
-      
+      const galleryFiles = galleryImages
+        .map(item => item.file)
+        .filter((file): file is File => file instanceof File);
       const productData = {
         ...data,
         profile: profileImage || undefined,
-        gallery: galleryImages.length > 0 ? galleryImages : undefined,
+        gallery: galleryFiles.length > 0 ? galleryFiles : undefined,
       };
 
       await dispatch(createProduct(productData)).unwrap();
@@ -108,21 +111,6 @@ export function AddProductDialog({ open, onOpenChange, categories }: AddProductD
     }
   };
 
-  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setProfileImage(file);
-    }
-  };
-
-  const handleGalleryImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setGalleryImages(prev => [...prev, ...files]);
-  };
-
-  const removeGalleryImage = (index: number) => {
-    setGalleryImages(prev => prev.filter((_, i) => i !== index));
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -405,14 +393,15 @@ export function AddProductDialog({ open, onOpenChange, categories }: AddProductD
               <div>
                 <Label>Profile Image</Label>
                 <div className="mt-2">
-                  <Input
+                  <FileUploader onImageChange={setProfileImage} />
+                  {/* <Input
                     type="file"
                     accept="image/*"
                     onChange={handleProfileImageChange}
                     className="cursor-pointer"
-                  />
+                  /> */}
                 </div>
-                {profileImage && (
+                {/* {profileImage && (
                   <div className="mt-2 flex items-center gap-2">
                     <img
                       src={URL.createObjectURL(profileImage)}
@@ -428,12 +417,12 @@ export function AddProductDialog({ open, onOpenChange, categories }: AddProductD
                       <IconX className="w-4 h-4" />
                     </Button>
                   </div>
-                )}
+                )} */}
               </div>
 
               <div>
                 <Label>Gallery Images</Label>
-                <div className="mt-2">
+                {/* <div className="mt-2">
                   <Input
                     type="file"
                     accept="image/*"
@@ -463,7 +452,8 @@ export function AddProductDialog({ open, onOpenChange, categories }: AddProductD
                       </div>
                     ))}
                   </div>
-                )}
+                )} */}
+                <ProductImageUploader  onFilesChange={setGalleryImages} />
               </div>
             </div>
 
